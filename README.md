@@ -14,7 +14,7 @@ C:\\DNNpacker.exe C:\Nevoweb\Websites\dev.dnnrocket.com\dev\www\DesktopModules\D
 It should also have a configuration fil eit the module root folder called "DNNpackager.config".
 
 Example:
-
+```xml
 <root>
 	<version>1.0.0</version>
 	<!-- Include only files that match the regular expression -->
@@ -45,3 +45,4 @@ Example:
 		<value>test.dll</value>
 	</assembly>
 </root>
+```
