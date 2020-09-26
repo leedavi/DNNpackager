@@ -2,7 +2,7 @@
 
 This crude console application will package a DNN module into a Instal zip file.
 
-This is a replacement ofr MSBuild and is not as far reaching as MSBUILD, but is independant to Visual Studio and simple.
+This is a replacement for MSBuild and is not as far reaching as MSBUILD, but is independant to Visual Studio and simple.
 
 You activate the build by runnig from the windoes prompt or through the VS post compile event.
 
@@ -11,7 +11,7 @@ It requires 1 parameter which is the root folder of the module.
 Example:
 C:\\DNNpacker.exe C:\Nevoweb\Websites\dev.dnnrocket.com\dev\www\DesktopModules\DNNrocketModules\RocketEcommerce
 
-It should also have a configuration fil eit the module root folder called "DNNpackager.config".
+It should also have a configuration file in the module root folder called "DNNpackager.config".
 
 Example:
 ```xml
