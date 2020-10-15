@@ -9,7 +9,7 @@ You activate the build by runnig from the windoes prompt or through the VS post 
 It requires 1 parameter which is the root folder of the module.
 
 Example:
-C:\\DNNpacker.exe C:\Nevoweb\Websites\dev.dnnrocket.com\dev\www\DesktopModules\DNNrocketModules\RocketEcommerce
+C:\\DNNpackager.exe C:\Websites\www\DesktopModules\DNNtestModules\testproject
 
 It should also have a configuration file in the module root folder called "DNNpackager.config".
 

@@ -70,8 +70,9 @@ namespace DNNpackager
                         File.Copy(fullPath, destPath.TrimEnd('\\') + "\\" + assemblyName);
                     }
 
-                    //ZIP temp folder into package.
-                    var zipFilePath = rootFolder + "\\" + dirName + "_" + _version + "_Install.zip";
+                    //ZIP temp folder into package on the project install folder.
+                    if (!Directory.Exists(_sourceRootPath + "\\Installation\\")) Directory.CreateDirectory(_sourceRootPath + "\\Installation\\");
+                    var zipFilePath = _sourceRootPath + "\\Installation\\" + dirName + "_" + _version + "_Install.zip";
                     if (File.Exists(zipFilePath)) File.Delete(zipFilePath);
                     ZipFile.CreateFromDirectory(destPath, zipFilePath);
                     Directory.Delete(destPath, true);
