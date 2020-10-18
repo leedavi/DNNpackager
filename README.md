@@ -46,3 +46,26 @@ Example:
 	</assembly>
 </root>
 ```
+
+Installation
+------------
+
+There is currently no installation package.  But if you're running Visual Studio with DNN, the chances are you already have any dependancies.
+
+So simply download the release exe or the source code form GITHUB and setup in a suitable directory.
+
+Setup in Visual Studio
+----------------------
+
+You can setup DNNpacker in Visual Studio, so it can be started easily
+
+In the Visual Studio menu.
+1. "Tools>External Tool"
+2. "Add" with the name "DNNpackager"
+3. Enter the correct path to DNNpackager.exe. (Where you placed it during installation)
+4. Check "Prompt for Arguments"
+
+When you run DNNpackager from the Visual Studio menu.  "Tools>DNNpackager" You will be prompted for aguments, select the "Project Directory - $(ProjectDir)"
+
+Click "OK" and the DNNpackger will run.  It should create an install zip file the $(ProjectDir)\Installation folder.
+
