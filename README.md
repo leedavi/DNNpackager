@@ -1,10 +1,10 @@
 # DNNpackager
 
-This crude console application will package a DNN module into a Instal zip file.
+This crude console application will package a DNN module into an Install zip file.
 
 This is a replacement for MSBuild and is not as far reaching as MSBUILD, but is independant to Visual Studio and simple.
 
-You activate the build by runnig from the windoes prompt or through the VS post compile event.
+You activate the build by runnig from the windows prompt, through the VS post compile event or through a Visual Studio External tool.
 
 It requires 1 parameter which is the root folder of the module.
 
@@ -20,6 +20,7 @@ Example:
 	<!-- Include only files that match the regular expression -->
 	<regexpr>(\.cshtml|\.html|\.resx|\.dnn|\.png|\.css|\.js|\.xml|\.txt|\.md)$</regexpr>
 	<directory include='false'>
+		<!-- Folders that will NOT be placed into the installation zip -->
 		<!-- All paths should be from the source root (project root) -->
 		<value>\.git</value>
 		<value>\.vs</value>
@@ -34,6 +35,7 @@ Example:
 		<value>\Theme</value>
 	</directory>
 	<file include='false'>
+		<!-- Extra files that need to be inclued. -->
 		<!-- All paths should be from the source root (project root) -->
 		<value></value>
 	</file>
