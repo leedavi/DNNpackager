@@ -65,9 +65,15 @@ namespace DNNpackager
                     var binFolder = _sourceRootPath + _binfolder;
                     foreach (var assemblyPath in _assemblyList)
                     {
-                        var assemblyName = Path.GetFileName(assemblyPath);
-                        var fullPath = binFolder.TrimEnd('\\') + "\\" + assemblyName;
-                        File.Copy(fullPath, destPath.TrimEnd('\\') + "\\" + assemblyName);
+                        if (assemblyPath != "")
+                        {
+                            var assemblyName = Path.GetFileName(assemblyPath);
+                            if (assemblyName != "")
+                            {
+                                var fullPath = binFolder.TrimEnd('\\') + "\\" + assemblyName;
+                                File.Copy(fullPath, destPath.TrimEnd('\\') + "\\" + assemblyName);
+                            }
+                        }
                     }
 
                     //ZIP temp folder into package on the project install folder.
