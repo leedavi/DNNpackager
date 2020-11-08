@@ -16,6 +16,7 @@ namespace DNNpackager
         private static string _pattern;
         private static List<string> _ignoredDirList;
         private static List<string> _ignoredFileList;
+        private static List<string> _includeFileList;        
         private static List<string> _assemblyList;        
         private static string _version;
         private static string _binfolder;
@@ -47,7 +48,7 @@ namespace DNNpackager
                     DirCopy(_sourceRootPath); // copy root without recursive
                     DirSearch(_sourceRootPath);
 
-                    // get the .dnn files ot the root.
+                    // get the .dnn files to the root.
                     foreach (var f in Directory.GetFiles(_resourcesPath))
                     {
                         if (Path.GetExtension(f).ToLower() == ".dnn")
@@ -58,7 +59,7 @@ namespace DNNpackager
                     }
 
                     //ZIP resouce and delete temp folders
-                    ZipFile.CreateFromDirectory(_resourcesPath, destPath + "\\Resources.zip");
+                    ZipFile.CreateFromDirectory(_resourcesPath, destPath + "\\Resource.zip");
                     Directory.Delete(_resourcesPath, true);
 
                     // Add assemblies - They are placed on the root folder.
@@ -75,6 +76,20 @@ namespace DNNpackager
                             }
                         }
                     }
+
+                    // Include specified file at root of install zip.
+                    foreach (var fileIncludePath in _includeFileList)
+                    {
+                        if (fileIncludePath != "")
+                        {
+                            var fileIncludeName = Path.GetFileName(fileIncludePath);
+                            if (fileIncludeName != "")
+                            {
+                                var dest = Path.Combine(destPath, Path.GetFileName(fileIncludeName));
+                                File.Copy(fileIncludePath, dest, true);
+                            }
+                        }
+                    }                    
 
                     //ZIP temp folder into package on the project install folder.
                     if (!Directory.Exists(_sourceRootPath + "\\Installation\\")) Directory.CreateDirectory(_sourceRootPath + "\\Installation\\");
@@ -104,10 +119,16 @@ namespace DNNpackager
                     _ignoredDirList.Add(_sourceRootPath + "\\" + nod.InnerText.TrimStart('\\'));
                 }
                 _ignoredFileList = new List<string>();
-                var nodList2 = _XmlDoc.SelectNodes("root/file/value");
+                var nodList2 = _XmlDoc.SelectNodes("root/file[@include='false']/value");
                 foreach (XmlNode nod in nodList2)
                 {
                     _ignoredFileList.Add(_sourceRootPath + "\\" + nod.InnerText.TrimStart('\\'));
+                }
+                _includeFileList = new List<string>();
+                var nodList6 = _XmlDoc.SelectNodes("root/file[@include='true']/value");
+                foreach (XmlNode nod in nodList6)
+                {
+                    _includeFileList.Add(_sourceRootPath + "\\" + nod.InnerText.TrimStart('\\'));
                 }
                 _assemblyList = new List<string>();
                 var nodList5 = _XmlDoc.SelectNodes("root/assembly/value");

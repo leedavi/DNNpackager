@@ -1,7 +1,8 @@
 {
   "profiles": {
     "DNNpackager": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "D:\\Websites\\dev.rocket.com\\Install\\DesktopModules\\DNNrocketModules\\RocketEcommerce"
     }
   }
 }
