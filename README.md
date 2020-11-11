@@ -34,7 +34,7 @@ Example:
 		<value>\Providers</value>
 		<value>\Theme</value>
 	</directory>
-	<file include='false'>
+	<file include='true'>
 		<!-- Extra files that need to be inclued. -->
 		<!-- All paths should be from the source root (project root) -->
 		<value></value>
