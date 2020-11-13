@@ -2,7 +2,7 @@
   "profiles": {
     "DNNpackager": {
       "commandName": "Project",
-      "commandLineArgs": "D:\\Websites\\dev.rocket.com\\Install\\DesktopModules\\DNNrocketModules\\RocketEcommerce"
+      "commandLineArgs": "C:\\Nevoweb\\Websites\\RocketEcommerce\\www.dnnrocket.com\\Install\\DesktopModules\\DNNrocket"
     }
   }
 }

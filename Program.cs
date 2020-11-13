@@ -15,6 +15,7 @@ namespace DNNpackager
         private static string _sourceRootPath;
         private static string _pattern;
         private static List<string> _ignoredDirList;
+        private static List<string> _includeDirList;        
         private static List<string> _ignoredFileList;
         private static List<string> _includeFileList;        
         private static List<string> _assemblyList;        
@@ -113,11 +114,33 @@ namespace DNNpackager
                 _XmlDoc.Load(configPath);
                 // get directory and file ignore list
                 _ignoredDirList = new List<string>();
-                var nodList = _XmlDoc.SelectNodes("root/directory/value");
+                var nodList = _XmlDoc.SelectNodes("root/directory[@include='false']/value");
                 foreach (XmlNode nod in nodList)
                 {
                     _ignoredDirList.Add(_sourceRootPath + "\\" + nod.InnerText.TrimStart('\\'));
                 }
+                _includeDirList = new List<string>();
+                var nodList7 = _XmlDoc.SelectNodes("root/directory[@include='true']/value");
+                foreach (XmlNode nod in nodList7)
+                {
+                    _includeDirList.Add(_sourceRootPath + "\\" + nod.InnerText.TrimStart('\\'));
+                }
+                // add all recursive folders
+                for (int i = 0; i < _includeDirList.Count; i++)
+                {
+                    var r = _includeDirList[i];
+                    if (r.EndsWith("*"))
+                    {
+                        _includeDirList[i] = r.Replace("\\*", "");
+                        var recursiveList = GetRecursiveList(_includeDirList[i], new List<string>());
+                        foreach (var r2 in recursiveList)
+                        {
+                            _includeDirList.Add(r2);
+                        }
+                    }
+                }
+
+
                 _ignoredFileList = new List<string>();
                 var nodList2 = _XmlDoc.SelectNodes("root/file[@include='false']/value");
                 foreach (XmlNode nod in nodList2)
@@ -161,21 +184,24 @@ namespace DNNpackager
             {
                 if (!_ignoredDirList.Contains(sDir))
                 {
-                    var destPath = _resourcesPath + sDir.Replace(_sourceRootPath, "");
-                    Console.WriteLine(sDir + "   ---> " + destPath);
-                    // copy required files.
-                    var files = Directory.GetFiles(sDir)
-                        .Where(x => Regex.IsMatch(x, _pattern))
-                        .Select(x => x).ToList();
-
-                    foreach (var item in files)
+                    if (_includeDirList.Count == 0 || (_includeDirList.Contains(sDir)))
                     {
-                        Console.WriteLine(item);
-                        string name = item.Substring(item.LastIndexOf("\\") + 1);
-                        var fullPath = Path.Combine(destPath, name);
-                        var directory = Path.GetDirectoryName(fullPath);
-                        Directory.CreateDirectory(directory);
-                        File.Copy(item, fullPath);
+                        var destPath = _resourcesPath + sDir.Replace(_sourceRootPath, "");
+                        Console.WriteLine(sDir + "   ---> " + destPath);
+                        // copy required files.
+                        var files = Directory.GetFiles(sDir)
+                            .Where(x => Regex.IsMatch(x, _pattern))
+                            .Select(x => x).ToList();
+
+                        foreach (var item in files)
+                        {
+                            Console.WriteLine(item);
+                            string name = item.Substring(item.LastIndexOf("\\") + 1);
+                            var fullPath = Path.Combine(destPath, name);
+                            var directory = Path.GetDirectoryName(fullPath);
+                            Directory.CreateDirectory(directory);
+                            File.Copy(item, fullPath);
+                        }
                     }
                 }
             }
@@ -192,8 +218,11 @@ namespace DNNpackager
                 {
                     if (!_ignoredDirList.Contains(d))
                     {
-                        DirCopy(d);
-                        DirSearch(d);
+                        if (_includeDirList.Count == 0 || (_includeDirList.Contains(d)))
+                        {
+                            DirCopy(d);
+                            DirSearch(d);
+                        }
                     }
                 }
             }
@@ -201,6 +230,16 @@ namespace DNNpackager
             {
                 Console.WriteLine(excpt.Message);
             }
+        }
+
+        static List<string> GetRecursiveList(string rDir, List<string> l)
+        {
+            foreach (string d in Directory.GetDirectories(rDir))
+            {
+                l.Add(d);
+                l = GetRecursiveList(d, l);
+            }
+            return l;
         }
 
     }
