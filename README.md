@@ -11,7 +11,7 @@ It requires 1 parameter which is the root folder of the module.
 Example:
 C:\\DNNpackager.exe C:\Websites\www\DesktopModules\DNNtestModules\testproject
 
-It should also have a configuration file in the module root folder called "DNNpackager.config".
+It should also have a configuration file in the module root folder called "DNNpackager.dnnpack".
 
 Example:
 ```xml

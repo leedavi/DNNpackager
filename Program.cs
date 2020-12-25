@@ -24,86 +24,104 @@ namespace DNNpackager
 
         static void Main(string[] args)
         {
-            if (args.Length >= 1)
+            try
             {
-                Console.WriteLine("DNNpackager: " + args[0]);
-                _sourceRootPath = args[0].TrimEnd('\\');
-                var configPath = _sourceRootPath + "\\DNNpackager.config";
-                if (Directory.Exists(_sourceRootPath) && File.Exists(configPath))
+                Console.WriteLine("Press any key to START.");
+                Console.ReadKey();
+
+                if (args.Length >= 1)
                 {
-                    // Create the Temporary Folder for Building (Remove previous)
-                    string dirName = new DirectoryInfo(_sourceRootPath).Name;
-                    var rootFolder = "C:\\DNNpackager";
-                    if (!Directory.Exists(rootFolder)) Directory.CreateDirectory(rootFolder);
-                    var destPath = rootFolder + "\\" + dirName;
-                    if (Directory.Exists(destPath)) Directory.Delete(destPath, true);
-                    Directory.CreateDirectory(destPath);
-                    _resourcesPath = destPath + "\\Resources";
-                    if (Directory.Exists(_resourcesPath)) Directory.Delete(_resourcesPath, true);
-                    Directory.CreateDirectory(_resourcesPath);
+                    Console.WriteLine("DNNpackager - args[0]: " + args[0]);
 
-                    //setup config
-                    SetupConfig(configPath);
-
-                    // do recursive copy files
-                    DirCopy(_sourceRootPath); // copy root without recursive
-                    DirSearch(_sourceRootPath);
-
-                    // get the .dnn files to the root.
-                    foreach (var f in Directory.GetFiles(_resourcesPath))
+                    var configPath = args[0];
+                    _sourceRootPath = Path.GetDirectoryName(configPath);
+                    Console.WriteLine("configPath: " + configPath);
+                    Console.WriteLine("sourceRootPath: " + _sourceRootPath);
+                    if (!File.Exists(configPath)) configPath += "\\DNNpackager.dnnpack"; // default to this config file, if we have not specified a valid file.
+                    if (Directory.Exists(_sourceRootPath) && File.Exists(configPath))
                     {
-                        if (Path.GetExtension(f).ToLower() == ".dnn")
-                        {
-                            var fullPath = Path.Combine(destPath, Path.GetFileName(f));
-                            File.Copy(f, fullPath, true);
-                        }
-                    }
+                        // Create the Temporary Folder for Building (Remove previous)
+                        string dirName = new DirectoryInfo(_sourceRootPath).Name;
+                        var rootFolder = "C:\\DNNpackager";
+                        if (!Directory.Exists(rootFolder)) Directory.CreateDirectory(rootFolder);
+                        var destPath = rootFolder + "\\" + dirName;
+                        if (Directory.Exists(destPath)) Directory.Delete(destPath, true);
+                        Directory.CreateDirectory(destPath);
+                        _resourcesPath = destPath + "\\Resources";
+                        if (Directory.Exists(_resourcesPath)) Directory.Delete(_resourcesPath, true);
+                        Directory.CreateDirectory(_resourcesPath);
 
-                    //ZIP resouce and delete temp folders
-                    ZipFile.CreateFromDirectory(_resourcesPath, destPath + "\\Resource.zip");
-                    Directory.Delete(_resourcesPath, true);
+                        //setup config
+                        SetupConfig(configPath);
 
-                    // Add assemblies - They are placed on the root folder.
-                    var binFolder = _sourceRootPath + _binfolder;
-                    foreach (var assemblyPath in _assemblyList)
-                    {
-                        if (assemblyPath != "")
+                        // do recursive copy files
+                        DirCopy(_sourceRootPath); // copy root without recursive
+                        DirSearch(_sourceRootPath);
+
+                        // get the .dnn files to the root.
+                        foreach (var f in Directory.GetFiles(_resourcesPath))
                         {
-                            var assemblyName = Path.GetFileName(assemblyPath);
-                            if (assemblyName != "")
+                            if (Path.GetExtension(f).ToLower() == ".dnn")
                             {
-                                var fullPath = binFolder.TrimEnd('\\') + "\\" + assemblyName;
-                                File.Copy(fullPath, destPath.TrimEnd('\\') + "\\" + assemblyName);
+                                var fullPath = Path.Combine(destPath, Path.GetFileName(f));
+                                File.Copy(f, fullPath, true);
                             }
                         }
-                    }
 
-                    // Include specified file at root of install zip.
-                    foreach (var fileIncludePath in _includeFileList)
-                    {
-                        if (fileIncludePath != "")
+                        //ZIP resouce and delete temp folders
+                        ZipFile.CreateFromDirectory(_resourcesPath, destPath + "\\Resource.zip");
+                        Directory.Delete(_resourcesPath, true);
+
+                        // Add assemblies - They are placed on the root folder.
+                        var binFolder = _sourceRootPath + _binfolder;
+                        foreach (var assemblyPath in _assemblyList)
                         {
-                            var fileIncludeName = Path.GetFileName(fileIncludePath);
-                            if (fileIncludeName != "")
+                            if (assemblyPath != "")
                             {
-                                var dest = Path.Combine(destPath, Path.GetFileName(fileIncludeName));
-                                File.Copy(fileIncludePath, dest, true);
+                                var assemblyName = Path.GetFileName(assemblyPath);
+                                if (assemblyName != "")
+                                {
+                                    var fullPath = binFolder.TrimEnd('\\') + "\\" + assemblyName;
+                                    File.Copy(fullPath, destPath.TrimEnd('\\') + "\\" + assemblyName);
+                                }
                             }
                         }
-                    }                    
 
-                    //ZIP temp folder into package on the project install folder.
-                    if (!Directory.Exists(_sourceRootPath + "\\Installation\\")) Directory.CreateDirectory(_sourceRootPath + "\\Installation\\");
-                    var zipFilePath = _sourceRootPath + "\\Installation\\" + dirName + "_" + _version + "_Install.zip";
-                    if (File.Exists(zipFilePath)) File.Delete(zipFilePath);
-                    ZipFile.CreateFromDirectory(destPath, zipFilePath);
-                    Directory.Delete(destPath, true);
+                        // Include specified file at root of install zip.
+                        foreach (var fileIncludePath in _includeFileList)
+                        {
+                            if (fileIncludePath != "")
+                            {
+                                var fileIncludeName = Path.GetFileName(fileIncludePath);
+                                if (fileIncludeName != "")
+                                {
+                                    var dest = Path.Combine(destPath, Path.GetFileName(fileIncludeName));
+                                    File.Copy(fileIncludePath, dest, true);
+                                }
+                            }
+                        }
 
+                        //ZIP temp folder into package on the project install folder.
+                        if (!Directory.Exists(_sourceRootPath + "\\Installation\\")) Directory.CreateDirectory(_sourceRootPath + "\\Installation\\");
+                        var zipFilePath = _sourceRootPath + "\\Installation\\" + dirName + "_" + _version + "_Install.zip";
+                        if (File.Exists(zipFilePath)) File.Delete(zipFilePath);
+                        ZipFile.CreateFromDirectory(destPath, zipFilePath);
+                        Directory.Delete(destPath, true);
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("Config file missing: " + configPath);
+                    }
                 }
-                else
-                {
-                    Console.WriteLine("Config file missing: " + configPath);
-                }
+                Console.WriteLine("Press any key.");
+                Console.ReadKey();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ERROR: " + ex.ToString());
+                Console.WriteLine("Press any key.");
+                Console.ReadKey();
             }
         }
         static void SetupConfig(string configPath)
