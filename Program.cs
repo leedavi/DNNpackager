@@ -34,15 +34,26 @@ namespace DNNpackager
                     Console.WriteLine("DNNpackager - args[0]: " + args[0]);
 
                     var configPath = args[0];
+                    if (Path.GetFileName(configPath) == "")
+                    {
+                        // Search for dnnpack file.
+                        var dlist = Directory.GetFiles(configPath);
+                        foreach (var f in dlist)
+                        {
+                            if (f.ToLower().EndsWith(".dnnpack")) configPath = f;
+                        }
+                    }
+
                     _sourceRootPath = Path.GetDirectoryName(configPath);
                     Console.WriteLine("configPath: " + configPath);
                     Console.WriteLine("sourceRootPath: " + _sourceRootPath);
                     if (!File.Exists(configPath)) configPath += "\\DNNpackager.dnnpack"; // default to this config file, if we have not specified a valid file.
+                    if (!File.Exists(configPath)) configPath += "\\DNNpackager.config"; // default to this config file, if we have not specified a valid file.
                     if (Directory.Exists(_sourceRootPath) && File.Exists(configPath))
                     {
                         // Create the Temporary Folder for Building (Remove previous)
                         string dirName = new DirectoryInfo(_sourceRootPath).Name;
-                        var rootFolder = "C:\\DNNpackager";
+                        var rootFolder = AppDomain.CurrentDomain.BaseDirectory;
                         if (!Directory.Exists(rootFolder)) Directory.CreateDirectory(rootFolder);
                         var destPath = rootFolder + "\\" + dirName;
                         if (Directory.Exists(destPath)) Directory.Delete(destPath, true);
@@ -258,6 +269,16 @@ namespace DNNpackager
                 l = GetRecursiveList(d, l);
             }
             return l;
+        }
+        public static string ReplaceLastOccurrence(string Source, string Find, string Replace)
+        {
+            int place = Source.LastIndexOf(Find);
+
+            if (place == -1)
+                return Source;
+
+            string result = Source.Remove(place, Find.Length).Insert(place, Replace);
+            return result;
         }
 
     }
