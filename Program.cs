@@ -21,12 +21,12 @@ namespace DNNpackager
         private static List<string> _assemblyList;        
         private static string _version;
         private static string _binfolder;
-
+        private static string _name;
         static void Main(string[] args)
         {
             try
             {
-                Console.WriteLine("Press any key to START.");
+                Console.WriteLine("Press any key to START");
                 Console.ReadKey();
 
                 if (args.Length >= 1)
@@ -114,7 +114,8 @@ namespace DNNpackager
 
                         //ZIP temp folder into package on the project install folder.
                         if (!Directory.Exists(_sourceRootPath + "\\Installation\\")) Directory.CreateDirectory(_sourceRootPath + "\\Installation\\");
-                        var zipFilePath = _sourceRootPath + "\\Installation\\" + dirName + "_" + _version + "_Install.zip";
+                        if (_name == "") _name = dirName;
+                        var zipFilePath = _sourceRootPath + "\\Installation\\" + _name + "_" + _version + "_Install.zip";
                         if (File.Exists(zipFilePath)) File.Delete(zipFilePath);
                         ZipFile.CreateFromDirectory(destPath, zipFilePath);
                         Directory.Delete(destPath, true);
@@ -200,7 +201,11 @@ namespace DNNpackager
                 _binfolder = "\\..\\..\\..\\bin";
                 if (nod6 != null) _binfolder = nod6.InnerText;
 
-                
+                var nod7 = _XmlDoc.SelectSingleNode("root/name");
+                _name = "";
+                if (nod7 != null) _name = nod7.InnerText;
+
+
             }
             catch (System.Exception excpt)
             {

@@ -17,6 +17,8 @@ Example:
 ```xml
 <root>
 	<version>1.0.0</version>
+	<!-- Name of zip file, optional.  Directory name is used if left blank -->
+	<name></name>
 	<!-- Include only files that match the regular expression -->
 	<regexpr>(\.cshtml|\.html|\.resx|\.dnn|\.png|\.css|\.js|\.xml|\.txt|\.md)$</regexpr>
 	<directory include='false'>
