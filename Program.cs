@@ -26,12 +26,22 @@ namespace DNNpackager
         {
             try
             {
-                Console.WriteLine("Press any key to START");
-                Console.ReadKey();
+                Console.WriteLine("START DNNpackager");
+                //Console.ReadKey();
 
                 if (args.Length >= 1)
                 {
-                    Console.WriteLine("DNNpackager - args[0]: " + args[0]);
+                    var copyDestination = "";
+                    var binSource = "";
+                    var binDestination = "";
+                    var configurationName = "release";
+                    if (args.Length == 5)
+                    {
+                        copyDestination = args[1];
+                        binSource = args[2];
+                        binDestination = args[3];
+                        configurationName = args[4];
+                    }
 
                     var configPath = args[0];
                     if (Path.GetFileName(configPath) == "")
@@ -45,10 +55,13 @@ namespace DNNpackager
                     }
 
                     _sourceRootPath = Path.GetDirectoryName(configPath);
-                    Console.WriteLine("configPath: " + configPath);
-                    Console.WriteLine("sourceRootPath: " + _sourceRootPath);
-                    if (!File.Exists(configPath)) configPath += "\\DNNpackager.dnnpack"; // default to this config file, if we have not specified a valid file.
-                    if (!File.Exists(configPath)) configPath += "\\DNNpackager.config"; // default to this config file, if we have not specified a valid file.
+
+                    Console.WriteLine("ProjectFolder: " + _sourceRootPath);
+                    Console.WriteLine("copyDestination: " + copyDestination);
+                    Console.WriteLine("binSource: " + binSource);
+                    Console.WriteLine("binDestination: " + binDestination);
+                    Console.WriteLine("ConfigurationName: " + configurationName);
+
                     if (Directory.Exists(_sourceRootPath) && File.Exists(configPath))
                     {
                         // Create the Temporary Folder for Building (Remove previous)
@@ -69,6 +82,14 @@ namespace DNNpackager
                         DirCopy(_sourceRootPath); // copy root without recursive
                         DirSearch(_sourceRootPath);
 
+                        // Copy files to working website direcotry
+                        if (copyDestination != "")
+                        {
+                            var diSource = new DirectoryInfo(_resourcesPath);
+                            var diTarget = new DirectoryInfo(copyDestination);
+                            CopyAll(diSource, diTarget);
+                        }
+
                         // get the .dnn files to the root.
                         foreach (var f in Directory.GetFiles(_resourcesPath))
                         {
@@ -81,10 +102,13 @@ namespace DNNpackager
 
                         //ZIP resouce and delete temp folders
                         ZipFile.CreateFromDirectory(_resourcesPath, destPath + "\\Resource.zip");
+
+                        // Delete temp resource folder.
                         Directory.Delete(_resourcesPath, true);
 
+                        if (!Directory.Exists(_sourceRootPath + "\\Installation\\")) Directory.CreateDirectory(_sourceRootPath + "\\Installation\\"); // Create installation folder (It should already exist)
+
                         // Add assemblies - They are placed on the root folder.
-                        var binFolder = _sourceRootPath + _binfolder;
                         foreach (var assemblyPath in _assemblyList)
                         {
                             if (assemblyPath != "")
@@ -92,8 +116,20 @@ namespace DNNpackager
                                 var assemblyName = Path.GetFileName(assemblyPath);
                                 if (assemblyName != "")
                                 {
-                                    var fullPath = binFolder.TrimEnd('\\') + "\\" + assemblyName;
-                                    File.Copy(fullPath, destPath.TrimEnd('\\') + "\\" + assemblyName);
+                                    var fullPath = binSource.TrimEnd('\\') + "\\" + assemblyName;
+                                    if (File.Exists(fullPath))
+                                    {
+                                        if (!fullPath.ToLower().EndsWith(".pdb") || (configurationName.ToLower() == "debug"))
+                                        {
+                                            File.Copy(fullPath, destPath.TrimEnd('\\') + "\\" + assemblyName, true);
+                                            // Copy exe to working website bin direcotry
+                                            if (binDestination != "")
+                                            {
+                                                File.Copy(fullPath, binDestination.TrimEnd('\\') + "\\" + assemblyName, true);
+                                            }
+                                        }
+                                    }
+
                                 }
                             }
                         }
@@ -112,12 +148,17 @@ namespace DNNpackager
                             }
                         }
 
-                        //ZIP temp folder into package on the project install folder.
-                        if (!Directory.Exists(_sourceRootPath + "\\Installation\\")) Directory.CreateDirectory(_sourceRootPath + "\\Installation\\");
-                        if (_name == "") _name = dirName;
-                        var zipFilePath = _sourceRootPath + "\\Installation\\" + _name + "_" + _version + "_Install.zip";
-                        if (File.Exists(zipFilePath)) File.Delete(zipFilePath);
-                        ZipFile.CreateFromDirectory(destPath, zipFilePath);
+                        if (configurationName.ToLower() == "release")
+                        {
+                            //ZIP temp folder into package on the project install folder.
+                            if (_name == "") _name = dirName;
+                            var zipFilePath = _sourceRootPath + "\\Installation\\" + _name + "_" + _version + "_Install.zip";
+
+                            // build a zip package
+                            if (File.Exists(zipFilePath)) File.Delete(zipFilePath);
+                            ZipFile.CreateFromDirectory(destPath, zipFilePath);
+                        }
+
                         Directory.Delete(destPath, true);
 
                     }
@@ -126,14 +167,33 @@ namespace DNNpackager
                         Console.WriteLine("Config file missing: " + configPath);
                     }
                 }
-                Console.WriteLine("Press any key.");
-                Console.ReadKey();
+                Console.WriteLine("END DNNpackager.");
+                //Console.ReadKey();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("ERROR: " + ex.ToString());
-                Console.WriteLine("Press any key.");
-                Console.ReadKey();
+                //Console.WriteLine("Press any key.");
+                //Console.ReadKey();
+            }
+        }
+        static void CopyAll(DirectoryInfo source, DirectoryInfo target)
+        {
+            Directory.CreateDirectory(target.FullName);
+
+            // Copy each file into the new directory.
+            foreach (FileInfo fi in source.GetFiles())
+            {
+                Console.WriteLine(@"Copying {0}\{1}", target.FullName, fi.Name);
+                fi.CopyTo(Path.Combine(target.FullName, fi.Name), true);
+            }
+
+            // Copy each subdirectory using recursion.
+            foreach (DirectoryInfo diSourceSubDir in source.GetDirectories())
+            {
+                DirectoryInfo nextTargetSubDir =
+                    target.CreateSubdirectory(diSourceSubDir.Name);
+                CopyAll(diSourceSubDir, nextTargetSubDir);
             }
         }
         static void SetupConfig(string configPath)

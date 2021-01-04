@@ -1,17 +1,11 @@
 # DNNpackager
 
-This crude console application will package a DNN module into an Install zip file.
+This console application is designed to allow the source of a module to be edited when not part of the webite structure.
+It will copy the installation files to the website, as if the module has been installed.  
 
-This is a replacement for MSBuild and is not as far reaching as MSBUILD, but is independant to Visual Studio and simple.
+It will also package a DNN module into an Install zip file.
 
-You activate the build by runnig from the windows prompt, through the VS post compile event or through a Visual Studio External tool.
-
-It requires 1 parameter which is the root folder of the module.
-
-Example:
-C:\\DNNpackager.exe C:\Websites\www\DesktopModules\DNNtestModules\testproject
-
-It should also have a configuration file in the module root folder called "DNNpackager.dnnpack".
+It should also have a configuration file in the Project root folder called "DNNpackager.dnnpack".
 
 Example:
 ```xml
@@ -41,9 +35,6 @@ Example:
 		<!-- All paths should be from the source root (project root) -->
 		<value></value>
 	</file>
-	<!-- The bin path gives the backward folder levels to the DNN bin folder, so assemblies can be taken. -->
-	<!-- In some cases, if the project folder is not under a company level, this will need to be change. -->
-	<binfolder>\\..\\..\\..\\bin</binfolder>
 	<assembly>
 		<!-- Assembllies will be taken from the DNN bin folder, and placed on root. -->
 		<value>test.dll</value>
@@ -54,22 +45,47 @@ Example:
 Installation
 ------------
 
-There is currently no installation package.  But if you're running Visual Studio with DNN, the chances are you already have any dependancies.
+Use the Installation Package to install on the local machine.
 
-So simply download the release exe or the source code form GITHUB and setup in a suitable directory.
+Create a BAT file
+-----------------
 
-Setup in Visual Studio
+The easiest way to run DNNpackager is to create a BAT file that executes the assembly whne VS compiles the code.
+ 
+The DNNpackager take 3 arguments.  
+
+DNNpackager.exe \<ProjectDir\> \<Website Module Folder\> \<Website bin Folder\>
+
+**ProjectDir** =  The root folder of the source project.
+
+**Website Module Folder** = The module folder in the website where the module files will be copied to.
+
+**Website bin Folder** = The bin folder of the website, where the assembly needs to be copied.
+
+Example:
+```
+
+"C:\Program Files (x86)\Nevoweb\DNNpackager\DNNpackager.exe"  "$(ProjectDir)" "C:\Nevoweb\Temp\copytest" "$(ProjectDir)$(OutDir)" "C:\Nevoweb\Temp\bin"
+
+```
+
+Copy to Working Folder
 ----------------------
 
-You can setup DNNpacker in Visual Studio, so it can be started easily
 
-In the Visual Studio menu.
-1. "Tools>External Tool"
-2. "Add" with the name "DNNpackager"
-3. Enter the correct path to DNNpackager.exe. (Where you placed it during installation)
-4. Check "Prompt for Arguments"
+A $(ProjectDir)\Installation folder should always be created. 
+The project assemblies need to be copied to the "Installation" folder, using build post events.
 
-When you run DNNpackager from the Visual Studio menu.  "Tools>DNNpackager" You will be prompted for aguments, select the "Project Directory - $(ProjectDir)"
+The DNNpackager is expecting the asseemblies in the Installaiton folder, so it can copy them to the website bin from there.
 
-Click "OK" and the DNNpackger will run.  It should create an install zip file the $(ProjectDir)\Installation folder.
+```
+
+copy "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(ProjectDir)\Installation\$(TargetFileName)"
+copy "$(ProjectDir)$(OutDir)$(AssemblyName).pdb" "$(ProjectDir)\Installation\$(AssemblyName).pdb"
+
+$(ProjectDir)\DNNpackager.bat
+
+```
+
+Running this from VS will also create an installation zip file for DNN.
 
