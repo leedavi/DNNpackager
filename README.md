@@ -54,7 +54,7 @@ The easiest way to run DNNpackager is to create a BAT file that executes the ass
  
 The DNNpackager take 3 arguments.  
 
-DNNpackager.exe \<ProjectDir\> \<Website Module Folder\> \<Website bin Folder\>
+DNNpackager.exe \<ProjectDir\> \<Website Module Folder\> \<Website bin Folder\> $(ConfigurationName)
 
 **ProjectDir** =  The root folder of the source project.
 
@@ -65,27 +65,55 @@ DNNpackager.exe \<ProjectDir\> \<Website Module Folder\> \<Website bin Folder\>
 Example:
 ```
 
-"C:\Program Files (x86)\Nevoweb\DNNpackager\DNNpackager.exe"  "$(ProjectDir)" "C:\Nevoweb\Temp\copytest" "$(ProjectDir)$(OutDir)" "C:\Nevoweb\Temp\bin"
+"C:\Program Files (x86)\Nevoweb\DNNpackager\DNNpackager.exe"  "$(ProjectDir)" "C:\Nevoweb\Temp\copytest" "$(ProjectDir)$(OutDir)" "C:\Nevoweb\Temp\bin" $(ConfigurationName)
 
 ```
+
+Running From VS
+---------------
+The operation is most easily ran from the "Post Build Event".  This automates the transfer of files from the working folders to the website folders.
+
+A BAT file needs to be cretaed which specifies the path to the website
+
+NOTE: The BAT file needs to be saved as ASCII.
+
+Example:
+```
+
+echo off
+set mpath = "C:\Nevoweb\Websites\www.dnnrocket.com\Install\DesktopModules\DNNrocketModules\RocketEcommerce"
+set bpath = "C:\Nevoweb\Websites\www.dnnrocket.com\Install\bin"
+C:\Nevoweb\Projects\Utils\DNNpackager\bin\netcoreapp3.1\DNNpackager.exe %1 %mpath% %2 %bpath% %3
+
+```
+
+Example of Post Build event in VS, which runs the BAT file:
+```
+
+$(ProjectDir)\Installation\Dist\www.dnnrocket.com.bat  $(ProjectDir) $(ProjectDir)$(OutDir) $(ConfigurationName)
+
+```
+
+
+
 
 Copy to Working Folder
 ----------------------
 
+If ONLY the $(ProjectDir) argument is passed to DNNpacker, a DNN install will be created.  However, if more arguments as passed DNNpackager can move files from your repo working area to your dev website area.
+This will allow you to create only 1 GIT repo on you dev machine.  Different BAT file can be created for different websites.
+
+Files form the working area will be copied to the website folders.
 
 A $(ProjectDir)\Installation folder should always be created. 
-The project assemblies need to be copied to the "Installation" folder, using build post events.
 
-The DNNpackager is expecting the asseemblies in the Installaiton folder, so it can copy them to the website bin from there.
+Running DNNpacker from VS when in "release" config, will create an installation zip file for DNN.
 
-```
+Copy Razor templates
+--------------------
 
-copy "$(ProjectDir)$(OutDir)$(TargetFileName)" "$(ProjectDir)\Installation\$(TargetFileName)"
-copy "$(ProjectDir)$(OutDir)$(AssemblyName).pdb" "$(ProjectDir)\Installation\$(AssemblyName).pdb"
+When we copy razor templates we do not wish to compile and copy the assemblies.  This ill cause the AppPool to recycle.
 
-$(ProjectDir)\DNNpackager.bat
+We create a config in the project called "Razor" that has ALL projects compile turned off.  We can use this to Sync the razorr templates.  Any templates on the website folder will be copied to the Git project folder if they are newer than the Git file. 
 
-```
-
-Running this from VS will also create an installation zip file for DNN.
 
