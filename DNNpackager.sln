@@ -10,15 +10,18 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Razor|Any CPU = Razor|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{408DD0E3-3CE4-451E-AA05-9F35BF940446}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{408DD0E3-3CE4-451E-AA05-9F35BF940446}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{408DD0E3-3CE4-451E-AA05-9F35BF940446}.Razor|Any CPU.ActiveCfg = Razor|Any CPU
 		{408DD0E3-3CE4-451E-AA05-9F35BF940446}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{408DD0E3-3CE4-451E-AA05-9F35BF940446}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0836E01B-6F3D-4AA6-BA8A-91FCA190F6C6}.Debug|Any CPU.ActiveCfg = Debug
 		{0836E01B-6F3D-4AA6-BA8A-91FCA190F6C6}.Debug|Any CPU.Build.0 = Debug
+		{0836E01B-6F3D-4AA6-BA8A-91FCA190F6C6}.Razor|Any CPU.ActiveCfg = Razor
 		{0836E01B-6F3D-4AA6-BA8A-91FCA190F6C6}.Release|Any CPU.ActiveCfg = Release
 		{0836E01B-6F3D-4AA6-BA8A-91FCA190F6C6}.Release|Any CPU.Build.0 = Release
 	EndGlobalSection

@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 
 namespace DNNpackager
@@ -27,10 +28,14 @@ namespace DNNpackager
             try
             {
                 Console.WriteLine("START DNNpackager");
-                //Console.ReadKey();
+                
+                // Sleep if we need to debug, so we can attach debugger
+                //Thread.Sleep(8000);
 
                 if (args.Length >= 1)
                 {
+                    if (args.Length == 1) Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
+
                     var copyDestination = "";
                     var binSource = "";
                     var binDestination = "";
@@ -40,7 +45,7 @@ namespace DNNpackager
                         copyDestination = args[1];
                         binSource = args[2];
                         binDestination = args[3];
-                        configurationName = args[4];
+                        configurationName = args[4].ToLower();
                     }
 
                     var configPath = args[0];
@@ -80,83 +85,100 @@ namespace DNNpackager
 
                         // do recursive copy files
                         DirCopy(_sourceRootPath); // copy root without recursive
-                        DirSearch(_sourceRootPath);
+                        DirSearch(_sourceRootPath, 0);
 
                         // Copy files to working website direcotry
                         if (copyDestination != "")
                         {
                             var diSource = new DirectoryInfo(_resourcesPath);
                             var diTarget = new DirectoryInfo(copyDestination);
-                            CopyAll(diSource, diTarget);
+
+                            if (configurationName != "release" && configurationName != "debug")
+                                SyncAll(diSource, diTarget); // take the oldest file in GIT and on Website. usualy for Razor Templates.
+                            else
+                                CopyAll(diSource, diTarget);
                         }
 
                         // get the .dnn files to the root.
+                        var dnnFileExists = false;
                         foreach (var f in Directory.GetFiles(_resourcesPath))
                         {
                             if (Path.GetExtension(f).ToLower() == ".dnn")
                             {
+                                dnnFileExists = true;
                                 var fullPath = Path.Combine(destPath, Path.GetFileName(f));
                                 File.Copy(f, fullPath, true);
                             }
                         }
-
-                        //ZIP resouce and delete temp folders
-                        ZipFile.CreateFromDirectory(_resourcesPath, destPath + "\\Resource.zip");
-
-                        // Delete temp resource folder.
-                        Directory.Delete(_resourcesPath, true);
-
-                        if (!Directory.Exists(_sourceRootPath + "\\Installation\\")) Directory.CreateDirectory(_sourceRootPath + "\\Installation\\"); // Create installation folder (It should already exist)
+                        if (!dnnFileExists)
+                        {
+                            // search the root for the dnn file
+                            var dnnFile = Path.Combine(_sourceRootPath, Path.GetFileNameWithoutExtension(configPath) + ".dnn");
+                            var fullPath = Path.Combine(destPath, Path.GetFileName(dnnFile));
+                            if (File.Exists(dnnFile))
+                            {
+                                dnnFileExists = true;
+                                File.Copy(dnnFile, fullPath, true);
+                            }
+                        }
 
                         // Add assemblies - They are placed on the root folder.
-                        foreach (var assemblyPath in _assemblyList)
+                        if (configurationName == "release" || configurationName == "debug")
                         {
-                            if (assemblyPath != "")
+                            //ZIP resouce and delete temp folders
+                            ZipFile.CreateFromDirectory(_resourcesPath, destPath + "\\Resource.zip");
+                            Directory.Delete(_resourcesPath, true);
+                            if (!Directory.Exists(_sourceRootPath + "\\Installation\\")) Directory.CreateDirectory(_sourceRootPath + "\\Installation\\"); // Create installation folder (It should already exist)
+
+                            foreach (var assemblyPath in _assemblyList)
                             {
-                                var assemblyName = Path.GetFileName(assemblyPath);
-                                if (assemblyName != "")
+                                if (assemblyPath != "")
                                 {
-                                    var fullPath = binSource.TrimEnd('\\') + "\\" + assemblyName;
-                                    if (File.Exists(fullPath))
+                                    var assemblyName = Path.GetFileName(assemblyPath);
+                                    if (assemblyName != "")
                                     {
-                                        if (!fullPath.ToLower().EndsWith(".pdb") || (configurationName.ToLower() == "debug"))
+                                        var fullPath = binSource.TrimEnd('\\') + "\\" + assemblyName;
+                                        if (File.Exists(fullPath))
                                         {
-                                            File.Copy(fullPath, destPath.TrimEnd('\\') + "\\" + assemblyName, true);
-                                            // Copy exe to working website bin direcotry
-                                            if (binDestination != "")
+                                            if (!fullPath.ToLower().EndsWith(".pdb") || (configurationName == "debug"))
                                             {
-                                                File.Copy(fullPath, binDestination.TrimEnd('\\') + "\\" + assemblyName, true);
+                                                File.Copy(fullPath, destPath.TrimEnd('\\') + "\\" + assemblyName, true);
+                                                // Copy exe to working website bin direcotry
+                                                if (binDestination != "")
+                                                {
+                                                    File.Copy(fullPath, binDestination.TrimEnd('\\') + "\\" + assemblyName, true);
+                                                }
                                             }
                                         }
+
                                     }
-
                                 }
                             }
-                        }
 
-                        // Include specified file at root of install zip.
-                        foreach (var fileIncludePath in _includeFileList)
-                        {
-                            if (fileIncludePath != "")
+                            // Include specified file at root of install zip.
+                            foreach (var fileIncludePath in _includeFileList)
                             {
-                                var fileIncludeName = Path.GetFileName(fileIncludePath);
-                                if (fileIncludeName != "")
+                                if (fileIncludePath != "")
                                 {
-                                    var dest = Path.Combine(destPath, Path.GetFileName(fileIncludeName));
-                                    File.Copy(fileIncludePath, dest, true);
+                                    var fileIncludeName = Path.GetFileName(fileIncludePath);
+                                    if (fileIncludeName != "")
+                                    {
+                                        var dest = Path.Combine(destPath, Path.GetFileName(fileIncludeName));
+                                        File.Copy(fileIncludePath, dest, true);
+                                    }
                                 }
                             }
-                        }
 
-                        if (configurationName.ToLower() == "release")
-                        {
-                            //ZIP temp folder into package on the project install folder.
-                            if (_name == "") _name = dirName;
-                            var zipFilePath = _sourceRootPath + "\\Installation\\" + _name + "_" + _version + "_Install.zip";
+                            if (configurationName.ToLower() == "release" && dnnFileExists)
+                            {
+                                //ZIP temp folder into package on the project install folder.
+                                if (_name == "") _name = dirName;
+                                var zipFilePath = _sourceRootPath + "\\Installation\\" + _name + "_" + _version + "_Install.zip";
 
-                            // build a zip package
-                            if (File.Exists(zipFilePath)) File.Delete(zipFilePath);
-                            ZipFile.CreateFromDirectory(destPath, zipFilePath);
+                                // build a zip package
+                                if (File.Exists(zipFilePath)) File.Delete(zipFilePath);
+                                ZipFile.CreateFromDirectory(destPath, zipFilePath);
+                            }
                         }
 
                         Directory.Delete(destPath, true);
@@ -177,6 +199,61 @@ namespace DNNpackager
                 //Console.ReadKey();
             }
         }
+        static void SyncAll(DirectoryInfo gitDir, DirectoryInfo webDir)
+        {
+            Directory.CreateDirectory(webDir.FullName);
+
+            var gitList = new List<FileInfo>();
+            foreach (FileInfo fi in gitDir.GetFiles()) { gitList.Add(fi); }
+            var webList = new List<FileInfo>();
+            foreach (FileInfo fi in webDir.GetFiles()) { webList.Add(fi); }
+
+            // copy any newer files from website to git repo
+            foreach (var fi in webList)
+            {
+                if (File.Exists(Path.Combine(gitDir.FullName, fi.Name)))
+                {
+                    var fileWebDate = fi.LastWriteTime;
+                    var fileGitDate = File.GetLastWriteTime(Path.Combine(gitDir.FullName, fi.Name));
+                    if (fileGitDate < fileWebDate)
+                    {
+                        Console.WriteLine("Pull: " + Path.Combine(gitDir.FullName, fi.Name));
+                        fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Pull: " + Path.Combine(gitDir.FullName, fi.Name));
+                    fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
+                }
+            }
+            // copy any newer files from git repoto website
+            foreach (var fi in gitList)
+            {
+                if (File.Exists(Path.Combine(webDir.FullName, fi.Name)))
+                {
+                    var fileGitDate = fi.LastWriteTime;
+                    var fileWebDate = File.GetLastWriteTime(Path.Combine(webDir.FullName, fi.Name));
+                    if (fileGitDate > fileWebDate)
+                    {
+                        Console.WriteLine("CopyTo: " + Path.Combine(webDir.FullName, fi.Name));
+                        fi.CopyTo(Path.Combine(webDir.FullName, fi.Name), true);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("CopyTo: " + Path.Combine(webDir.FullName, fi.Name));
+                    fi.CopyTo(Path.Combine(webDir.FullName, fi.Name), true);
+                }
+            }
+
+            // Copy each subdirectory using recursion.
+            foreach (DirectoryInfo diSourceSubDir in gitDir.GetDirectories())
+            {
+                DirectoryInfo nextTargetSubDir = webDir.CreateSubdirectory(diSourceSubDir.Name);
+                SyncAll(diSourceSubDir, nextTargetSubDir);
+            }
+        }
         static void CopyAll(DirectoryInfo source, DirectoryInfo target)
         {
             Directory.CreateDirectory(target.FullName);
@@ -184,15 +261,27 @@ namespace DNNpackager
             // Copy each file into the new directory.
             foreach (FileInfo fi in source.GetFiles())
             {
-                Console.WriteLine(@"Copying {0}\{1}", target.FullName, fi.Name);
-                fi.CopyTo(Path.Combine(target.FullName, fi.Name), true);
+                if (File.Exists(Path.Combine(target.FullName, fi.Name)))
+                {
+                    var fileSourceDate = File.GetLastWriteTime(Path.Combine(source.FullName, fi.Name));
+                    var fileDestDate = File.GetLastWriteTime(Path.Combine(target.FullName, fi.Name));
+                    if (fileSourceDate > fileDestDate)
+                    {
+                        Console.WriteLine("Overwrite: " + Path.Combine(target.FullName, fi.Name));
+                        fi.CopyTo(Path.Combine(target.FullName, fi.Name), true);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Copy: " + Path.Combine(target.FullName, fi.Name));
+                    fi.CopyTo(Path.Combine(target.FullName, fi.Name), true);
+                }
             }
 
             // Copy each subdirectory using recursion.
             foreach (DirectoryInfo diSourceSubDir in source.GetDirectories())
             {
-                DirectoryInfo nextTargetSubDir =
-                    target.CreateSubdirectory(diSourceSubDir.Name);
+                DirectoryInfo nextTargetSubDir = target.CreateSubdirectory(diSourceSubDir.Name);
                 CopyAll(diSourceSubDir, nextTargetSubDir);
             }
         }
@@ -222,7 +311,7 @@ namespace DNNpackager
                     if (r.EndsWith("*"))
                     {
                         _includeDirList[i] = r.Replace("\\*", "");
-                        var recursiveList = GetRecursiveList(_includeDirList[i], new List<string>());
+                        var recursiveList = GetRecursiveList(_includeDirList[i], new List<string>(),0);
                         foreach (var r2 in recursiveList)
                         {
                             _includeDirList.Add(r2);
@@ -281,7 +370,6 @@ namespace DNNpackager
                     if (_includeDirList.Count == 0 || (_includeDirList.Contains(sDir)))
                     {
                         var destPath = _resourcesPath + sDir.Replace(_sourceRootPath, "");
-                        Console.WriteLine(sDir + "   ---> " + destPath);
                         // copy required files.
                         var files = Directory.GetFiles(sDir)
                             .Where(x => Regex.IsMatch(x, _pattern))
@@ -289,7 +377,7 @@ namespace DNNpackager
 
                         foreach (var item in files)
                         {
-                            Console.WriteLine(item);
+                            //Console.WriteLine(item);
                             string name = item.Substring(item.LastIndexOf("\\") + 1);
                             var fullPath = Path.Combine(destPath, name);
                             var directory = Path.GetDirectoryName(fullPath);
@@ -304,7 +392,7 @@ namespace DNNpackager
                 Console.WriteLine(excpt.Message);
             }
         }
-        static void DirSearch(string sDir)
+        static void DirSearch(string sDir, int idx)
         {
             try
             {
@@ -314,8 +402,9 @@ namespace DNNpackager
                     {
                         if (_includeDirList.Count == 0 || (_includeDirList.Contains(d)))
                         {
+                            if (idx == 0) Console.WriteLine(d);
                             DirCopy(d);
-                            DirSearch(d);
+                            DirSearch(d, idx + 1);
                         }
                     }
                 }
@@ -326,12 +415,12 @@ namespace DNNpackager
             }
         }
 
-        static List<string> GetRecursiveList(string rDir, List<string> l)
+        static List<string> GetRecursiveList(string rDir, List<string> l, int idx)
         {
             foreach (string d in Directory.GetDirectories(rDir))
             {
                 l.Add(d);
-                l = GetRecursiveList(d, l);
+                l = GetRecursiveList(d, l, idx + 1);
             }
             return l;
         }
