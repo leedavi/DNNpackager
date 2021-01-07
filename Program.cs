@@ -34,7 +34,7 @@ namespace DNNpackager
 
                 if (args.Length >= 1)
                 {
-                    if (args.Length == 1) Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
+                    //if (args.Length == 1) Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
 
                     var copyDestination = "";
                     var binSource = "";
