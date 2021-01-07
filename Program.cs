@@ -23,6 +23,10 @@ namespace DNNpackager
         private static string _version;
         private static string _binfolder;
         private static string _name;
+
+        private static string _websiteBinFolder;
+        private static string _websiteDestFolder;
+
         static void Main(string[] args)
         {
             try
@@ -36,16 +40,15 @@ namespace DNNpackager
                 {
                     if (args.Length == 1) Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
 
-                    var copyDestination = "";
+                    _websiteBinFolder = "";
+                    _websiteDestFolder = "";
+
                     var binSource = "";
-                    var binDestination = "";
                     var configurationName = "release";
-                    if (args.Length == 5)
+                    if (args.Length == 3)
                     {
-                        copyDestination = args[1];
-                        binSource = args[2];
-                        binDestination = args[3];
-                        configurationName = args[4].ToLower();
+                        binSource = args[1];
+                        configurationName = args[2].ToLower();
                     }
 
                     var configPath = args[0];
@@ -62,9 +65,7 @@ namespace DNNpackager
                     _sourceRootPath = Path.GetDirectoryName(configPath);
 
                     Console.WriteLine("ProjectFolder: " + _sourceRootPath);
-                    Console.WriteLine("copyDestination: " + copyDestination);
                     Console.WriteLine("binSource: " + binSource);
-                    Console.WriteLine("binDestination: " + binDestination);
                     Console.WriteLine("ConfigurationName: " + configurationName);
 
                     if (Directory.Exists(_sourceRootPath) && File.Exists(configPath))
@@ -88,10 +89,10 @@ namespace DNNpackager
                         DirSearch(_sourceRootPath, 0);
 
                         // Copy files to working website direcotry
-                        if (copyDestination != "")
+                        if (_websiteDestFolder != "")
                         {
                             var diSource = new DirectoryInfo(_resourcesPath);
-                            var diTarget = new DirectoryInfo(copyDestination);
+                            var diTarget = new DirectoryInfo(_websiteDestFolder);
 
                             if (configurationName != "release" && configurationName != "debug")
                                 SyncAll(diSource, diTarget); // take the oldest file in GIT and on Website. usualy for Razor Templates.
@@ -149,9 +150,9 @@ namespace DNNpackager
                                             {
                                                 File.Copy(fullPath, destPath.TrimEnd('\\') + "\\" + assemblyName, true);
                                                 // Copy exe to working website bin direcotry
-                                                if (binDestination != "")
+                                                if (_websiteBinFolder != "")
                                                 {
-                                                    File.Copy(fullPath, binDestination.TrimEnd('\\') + "\\" + assemblyName, true);
+                                                    File.Copy(fullPath, _websiteBinFolder.TrimEnd('\\') + "\\" + assemblyName, true);
                                                 }
                                             }
                                         }
@@ -359,6 +360,23 @@ namespace DNNpackager
                 _name = "";
                 if (nod7 != null) _name = nod7.InnerText;
 
+                // load config (destination website)
+                var dnnpackconfig = Path.GetDirectoryName(configPath) + "\\dnnpack.config";
+                if (!File.Exists(dnnpackconfig))
+                {
+                    var xmlData = "<root><websitebinfoldermappath></websitebinfoldermappath><websitedestfoldermappath></websitedestfoldermappath></root>";
+                    File.WriteAllText(dnnpackconfig, xmlData);
+                }
+                var xmlDoc = new XmlDocument();
+                xmlDoc.Load(dnnpackconfig);
+
+                XmlNode websiteBinFolder = xmlDoc.SelectSingleNode("root/websitebinfoldermappath");
+                if (websiteBinFolder != null) _websiteBinFolder = websiteBinFolder.InnerText;
+                Console.WriteLine("WebsiteBinFolder: " + _websiteBinFolder);
+
+                XmlNode websiteDestFolder = xmlDoc.SelectSingleNode("root/websitedestfoldermappath");
+                if (websiteDestFolder != null) _websiteDestFolder = websiteDestFolder.InnerText;
+                Console.WriteLine("WebsiteDestFolder: " + _websiteDestFolder);
 
             }
             catch (System.Exception excpt)
