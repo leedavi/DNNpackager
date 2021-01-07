@@ -34,7 +34,7 @@ namespace DNNpackager
 
                 if (args.Length >= 1)
                 {
-                    //if (args.Length == 1) Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
+                    if (args.Length == 1) Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
 
                     var copyDestination = "";
                     var binSource = "";
@@ -114,6 +114,10 @@ namespace DNNpackager
                         {
                             // search the root for the dnn file
                             var dnnFile = Path.Combine(_sourceRootPath, Path.GetFileNameWithoutExtension(configPath) + ".dnn");
+                            foreach (var f in Directory.GetFiles(_sourceRootPath))
+                            {
+                                if (Path.GetExtension(f).ToLower() == ".dnn") dnnFile = Path.Combine(_sourceRootPath, Path.GetFileName(f));
+                            }
                             var fullPath = Path.Combine(destPath, Path.GetFileName(dnnFile));
                             if (File.Exists(dnnFile))
                             {
@@ -137,7 +141,8 @@ namespace DNNpackager
                                     var assemblyName = Path.GetFileName(assemblyPath);
                                     if (assemblyName != "")
                                     {
-                                        var fullPath = binSource.TrimEnd('\\') + "\\" + assemblyName;
+                                        var fullPath = assemblyPath;
+                                        if (!File.Exists(fullPath)) fullPath = binSource.TrimEnd('\\') + "\\" + assemblyName;
                                         if (File.Exists(fullPath))
                                         {
                                             if (!fullPath.ToLower().EndsWith(".pdb") || (configurationName == "debug"))
