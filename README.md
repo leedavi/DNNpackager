@@ -43,61 +43,52 @@ Installation
 
 Use the Installation Package to install on the local machine.
 
-Create a BAT file
+Running From VS
 -----------------
 
-The easiest way to run DNNpackager is to create a BAT file that executes the assembly when VS compiles the code.
+The operation is most easily ran from the "Post Build Event".  This automates the transfer of files from the working folders to the website folders.
  
-The DNNpackager takes 1 or 5 arguments.  
+The DNNpackager takes 1 or 3 arguments.  
 
 DNNpackager.exe \<ProjectDir\>\<Config Name (optional)\>
 
 DNNpackager.exe \<ProjectDir\>\<Config Name (optional)\> \<CopyDestination\> \<BinSource\> \<BinDestination\> \<ConfigurationName\>
 
-arg1- **\<ProjectDir\>\<Config Name (optional)\>** =  The config .dnnpack file.  If the \<Config Name (optional)\> is omitted the project folder is searched for any ".dnnpack" file.  The .dnnpack file should be created on the project root folder.
+arg1- **\<ProjectDir\>\<Config Name (optional)\>** = \$(ProjectDir)  The config .dnnpack file.  If the \<Config Name (optional)\> is omitted the project folder is searched for any ".dnnpack" file.  The .dnnpack file should be created on the project root folder.
 
-arg2 - **\<CopyDestination\>** = The module folder in the website where the project files will be copied to. (optional)
+arg2 - **\<BinSource\>** = The bin folder of the source module.  In VS tokens it is \$(ProjectDir)\$(OutDir) (optional)
 
-arg3 - **\<BinSource\>** = The bin folder of the source module.  In VS tokens it is $(ProjectDir)$(OutDir) (optional)
-
-arg3 - **\<BinDestination\>** = The bin folder of the website. Where the assembly will be copied to. (optional)
-
-arg3 - **\<ConfigurationName\>** = The VS configuration. $(ConfigurationName) (optional)
+arg3 - **\<ConfigurationName\>** = The VS configuration. \$(ConfigurationName) (optional)
 
 Example from VS post build event:
 ```
 
-"C:\Program Files (x86)\Nevoweb\DNNpackager\DNNpackager.exe"  "$(ProjectDir)" "C:\Nevoweb\Temp\copytest" "$(ProjectDir)$(OutDir)" "C:\Nevoweb\Temp\bin" $(ConfigurationName)
+C:\Program Files (x86)\Nevoweb\DNNpackager\DNNpackager.exe  $(ProjectDir) $(ProjectDir)$(OutDir) $(ConfigurationName)
 
 ```
 
-Running From VS
+If the directory of the exe is included in the windows PATH environment, you can minimise the line in VS post build event to:
+```
+
+DNNpackager.exe  $(ProjectDir) $(ProjectDir)$(OutDir) $(ConfigurationName)
+
+```
+
+
+dnnpack.config File
 ---------------
-The operation is most easily ran from the "Post Build Event".  This automates the transfer of files from the working folders to the website folders.
 
-A BAT file can be cretaed to make it easier to use on different project. It specifies the path to the website folders.
-
-NOTE: The BAT file needs to be saved as ASCII.
+The dnnpack.config file is required to copy files to the development website.  (Or Sync)
 
 Example:
 ```
-
-echo off
-set mpath = "C:\Nevoweb\Websites\www.dnnrocket.com\Install\DesktopModules\DNNrocketModules\RocketEcommerce"
-set bpath = "C:\Nevoweb\Websites\www.dnnrocket.com\Install\bin"
-"C:\Program Files (x86)\Nevoweb\DNNpackager\DNNpackager.exe" %1 %mpath% %2 %bpath% %3
-
+<root>
+  <websitebinfoldermappath>C:\Nevoweb\Websites\www.dnnrocket.com\Install\bin</websitebinfoldermappath>
+  <websitedestfoldermappath>C:\Nevoweb\Websites\www.dnnrocket.com\Install\DesktopModules\DNNrocketModules\RE_CartPriceShipping</websitedestfoldermappath>
+</root>
 ```
 
-This BAT file can then be called from the post build event in VS.  Different BAT files can be used for different websaite paths.
-
-Example of Post Build event in VS, which runs the BAT file:
-```
-
-$(ProjectDir)\Installation\Dist\www.dnnrocket.com.bat  $(ProjectDir) $(TargetDir) $(ConfigurationName)
-
-```
-
+If no file exists in the project a blank XML file is created.
 
 
 Copy to Working Folder
@@ -118,6 +109,7 @@ Copy Razor templates
 
 When we copy razor templates we do not wish to compile and copy the assemblies.  (Doing this will cause the AppPool to recycle)
 
-We create a config in the VS project called "Razor" (or any other name apart from "release" and "debug") that has ALL project compile turned off.  We can use this to Sync the razor templates.  Any templates on the website folder will be copied to the Git project folder if they are newer than the Git file. 
+We create a config in the VS project called "Razor" (or any other name apart from "release" and "debug") that has ALL project compile turned off.  We can use this to Sync the razor templates.  Any templates on the website folder will be copied to the Git project folder if they are newer than the Git file. And the same copy/sync rules apply for copying the Git working area files to the website.
+
 
 
