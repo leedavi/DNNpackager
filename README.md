@@ -112,4 +112,41 @@ When we copy razor templates we do not wish to compile and copy the assemblies. 
 We create a config in the VS project called "Razor" (or any other name apart from "release" and "debug") that has ALL project compile turned off.  We can use this to Sync the razor templates.  Any templates on the website folder will be copied to the Git project folder if they are newer than the Git file. And the same copy/sync rules apply for copying the Git working area files to the website.
 
 
+VS External Tool
+----------------
+You can also setup external tools in VS to make compiling quicker.
+
+It is best to setup 3 tools, each for release, debug, razor.
+
+Shortcut keys can also help.  Setup from >Tools>Options>Environment>Keyboard
+
+Search for "External." to find the possible commands.  If you place the compile in position 1,2,3 you can link like this:
+
+```
+DNN Build (release)
+DNNpackager.exe
+$(ProjectDir) $(TargetPath) release
+$(ProjectDir)
+```
+\<Shit + Ctrl + 1\>  
+
+```
+DNN Build (debug)
+DNNpackager.exe
+$(ProjectDir) $(TargetPath) debug
+ $(ProjectDir)
+```
+\<Shit + Ctrl + 2\>  
+ 
+```
+DNN Build (razor)
+DNNpackager.exe
+$(ProjectDir) $(TargetPath) razor
+$(ProjectDir)
+```
+\<Shit + Ctrl + 3\>  
+
+
+
+
 

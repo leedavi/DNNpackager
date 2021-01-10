@@ -194,6 +194,12 @@ namespace DNNpackager
                     {
                         Console.WriteLine("Config file missing: " + configPath);
                     }
+
+                    Console.WriteLine("++++++++++++++++++++++++++ " + configurationName.ToUpper() + " ++++++++++++++++++++++++++");
+                    if (configurationName != "release" && configurationName != "debug")
+                    {
+                        Console.WriteLine("***** SYNC FILES ONLY *******");
+                    }
                 }
                 Console.WriteLine("END DNNpackager.");
                 //Console.ReadKey();
