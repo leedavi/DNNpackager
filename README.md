@@ -125,7 +125,7 @@ Search for "External." to find the possible commands.  If you place the compile 
 ```
 DNN Build (release)
 DNNpackager.exe
-$(ProjectDir) $(TargetPath) release
+$(ProjectDir) $(TargetDir) release
 $(ProjectDir)
 ```
 \<Shit + Ctrl + 1\>  
@@ -133,15 +133,15 @@ $(ProjectDir)
 ```
 DNN Build (debug)
 DNNpackager.exe
-$(ProjectDir) $(TargetPath) debug
- $(ProjectDir)
+$(ProjectDir) $(TargetDir) debug
+$(ProjectDir)
 ```
 \<Shit + Ctrl + 2\>  
  
 ```
 DNN Build (razor)
 DNNpackager.exe
-$(ProjectDir) $(TargetPath) razor
+$(ProjectDir) $(TargetDir) razor
 $(ProjectDir)
 ```
 \<Shit + Ctrl + 3\>  
