@@ -1,17 +1,18 @@
 # DNNpackager
 
-This console application is designed to allow the source of a module to be edited when not included in the webite structure.
-It will copy the installation files to the website, like when the module has been installed.  
+This console application will copy the installation files to the website, like when the module has been installed.  
 
 It will also package a DNN module into an Install zip file.
 
-It should also have a configuration file in the Project root folder called "DNNpackager.dnnpack".
+A configuration file should be in the Project root folder: "DNNpackager.dnnpack".
 
 Example:
 ```xml
 <root>
 	<version>1.0.0</version>
-	<!-- Include only files that match the regular expression -->
+  <websitedestrelpath>\DesktopModules\DNNrocket\AppThemes</websitedestrelpath>
+  <websitedestbinrelpath>\bin</websitedestbinrelpath>
+  <!-- Include only files that match the regular expression -->
 	<regexpr>(\.cshtml|\.html|\.resx|\.dnn|\.png|\.css|\.js|\.xml|\.txt|\.md|\.aspx|\.ascx|\.ashx)$</regexpr>
 	<directory include='false'>
 		<!-- All paths should be from the source root (project root) -->
@@ -19,35 +20,35 @@ Example:
 		<value>\.vs</value>
 		<value>\bin</value>
 		<value>\Components</value>
-		<value>\Installation</value>
+		<value>\Installation\Dist</value>
 		<value>\Interfaces</value>
 		<value>\obj</value>
 		<value>\packages</value>
 		<value>\Providers</value>
-		<value>\render</value>
-		<value>\SqlDataProvider</value>
-		<value>\_external</value>
-		<value>\ApiControllers</value>    
-	</directory>
-	<file include='false'>
-	</file>
+    <value>\render</value>
+    <value>\SqlDataProvider</value>
+    <value>\_external</value>
+    <value>\ApiControllers</value>    
+  </directory>
+  <file include='false'>
+  </file>
 	<assembly>
-		<value>DNNrocketAPI.dll</value>
-		<value>DNNrocketAPI.pdb</value>
-	</assembly>
+		<value>RocketAppThemes.dll</value>
+    <value>RocketAppThemes.pdb</value>
+  </assembly>
 </root>
 ```
 
 Installation
 ------------
 
-Use the Installation Package to install on the local machine.
+Use the Installation Package to install on the local machine or clone the repository from GitHub and compile.
 
 Running From VS
 -----------------
 
 The operation is most easily ran from the "Post Build Event".  This automates the transfer of files from the working folders to the website folders.
- 
+
 The DNNpackager takes 1 or 3 arguments.  
 
 DNNpackager.exe \<ProjectDir\>\<Config Name (optional)\>
@@ -78,9 +79,15 @@ DNNpackager.exe  $(ProjectDir) $(ProjectDir)$(OutDir) $(ConfigurationName)
 dnnpack.config File
 ---------------
 
-The dnnpack.config file is required to copy files to the development website.  (Or Sync)
+The "dnnpack.config" file is required to copy files to the development website.  (Or Sync)
 
 Example:
+```
+<root>
+  <websitemappath>D:\Websites\dev.rocket.com\Install</websitemappath>
+</root>
+```
+Deprecated Example:
 ```
 <root>
   <websitebinfoldermappath>C:\Nevoweb\Websites\www.dnnrocket.com\Install\bin</websitebinfoldermappath>
@@ -96,7 +103,7 @@ Copy to Working Folder
 
 If ONLY the $(ProjectDir) argument is passed to DNNpacker, a DNN install will be created.  You can associate the .dnnpack extension with DNNpackager, you can then double click on the .dnnpack file to build the installation.
 
-If more arguments are passed DNNpackager can move files from your repo working area to your dev website area. This will allow you to create only 1 GIT repo on you dev machine.
+If more arguments are passed DNNpackager can move files from your repo working area to your dev website area. This will allow you to create only 1 GIT repo on you dev machine and use it on multiple websites.
 
 Files from the working area will be copied to the website folders.
 
@@ -137,7 +144,7 @@ $(ProjectDir) $(TargetDir) debug
 $(ProjectDir)
 ```
 \<Shit + Ctrl + 2\>  
- 
+
 ```
 DNN Build (razor)
 DNNpackager.exe
@@ -146,6 +153,35 @@ $(ProjectDir)
 ```
 \<Shit + Ctrl + 3\>  
 
+
+Working with Multiple Projects
+------------------------------
+Sometimes we want to work with multiple projects on the same website.  The "dnnpack.config" is looked for in the project file first, but if not found it will search in the parent folder until it finds a "dnnpack.config".
+
+In the "dnnpack.config" file are the required website destination mappath to the website root.
+
+```
+<root>
+  <websitemappath>D:\Websites\dev.rocket.com\Install</websitemappath>
+</root>
+```
+This will be used, with the destination iformation in the "DNNpackager.dnnpack" file to move the files to the correct website folders.
+```
+  <websitedestrelpath>\DesktopModules\DNNrocket\AppThemes</websitedestrelpath>
+  <websitedestbinrelpath>\bin</websitedestbinrelpath>
+```
+"websitedestbinrelpath" is optional.
+
+Example:
+```
+DevFolder > Projects > Project1
+DevFolder > Projects > Project2
+DevFolder > Projects > Project3
+```
+
+The "dnnpack.config" file should be placed in ```DevFolder > Projects``` folder.  When each of the projects are compiled or DNNpacker run it will use the parent "dnnpack.config" (Unless you place a "dnnpack.config" file in the project folder).
+
+The allows you to have multiple projects under 1 folder, that all use the same "dnnpack.config" file and hence the same website.
 
 
 

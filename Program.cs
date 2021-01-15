@@ -24,6 +24,9 @@ namespace DNNpackager
         private static string _binfolder;
         private static string _name;
 
+        private static string _websiteFolder;
+        private static string _websitedestrelpath;
+        private static string _websitedestbinrelpath;
         private static string _websiteBinFolder;
         private static string _websiteDestFolder;
 
@@ -297,6 +300,18 @@ namespace DNNpackager
                 CopyAll(diSourceSubDir, nextTargetSubDir);
             }
         }
+        static string GetdnnpackFileMapPath(string dnnpackMapPath, int level)
+        {
+            if (level > 10) return "";
+            level += 1;
+            if (!File.Exists(dnnpackMapPath) && Directory.Exists(Path.GetDirectoryName(dnnpackMapPath)))
+            {
+                var newPath = Path.GetDirectoryName(dnnpackMapPath) + "\\..\\dnnpack.config";
+                dnnpackMapPath = GetdnnpackFileMapPath(newPath, level);
+            }
+            return dnnpackMapPath;
+        }
+
         static void SetupConfig(string configPath)
         {
             try
@@ -358,31 +373,45 @@ namespace DNNpackager
                 _version = "0.0";
                 if (nod4 != null) _version = nod4.InnerText;
 
-                var nod6 = _XmlDoc.SelectSingleNode("root/binfolder");
-                _binfolder = "\\..\\..\\..\\bin";
-                if (nod6 != null) _binfolder = nod6.InnerText;
+                var nod6 = _XmlDoc.SelectSingleNode("root/websitedestrelpath");
+                if (nod6 != null) _websitedestrelpath = nod6.InnerText;
 
                 var nod7 = _XmlDoc.SelectSingleNode("root/name");
                 _name = "";
                 if (nod7 != null) _name = nod7.InnerText;
+                
+                var nod8 = _XmlDoc.SelectSingleNode("root/websitedestbinrelpath");
+                _websitedestbinrelpath = "\\bin";
+                if (nod8 != null) _websitedestbinrelpath = nod8.InnerText;
 
                 // load config (destination website)
-                var dnnpackconfig = Path.GetDirectoryName(configPath) + "\\dnnpack.config";
+                var dnnpackconfig = GetdnnpackFileMapPath(Path.GetDirectoryName(configPath) + "\\dnnpack.config", 0);
                 if (!File.Exists(dnnpackconfig))
                 {
-                    var xmlData = "<root><websitebinfoldermappath></websitebinfoldermappath><websitedestfoldermappath></websitedestfoldermappath></root>";
-                    File.WriteAllText(dnnpackconfig, xmlData);
+                    var xmlData = "<root>" + Environment.NewLine + "<websitemappath></websitemappath>" + Environment.NewLine + "</root>";
+                    File.WriteAllText(Path.GetDirectoryName(configPath) + "\\dnnpack.config", xmlData);
                 }
                 var xmlDoc = new XmlDocument();
                 xmlDoc.Load(dnnpackconfig);
 
-                XmlNode websiteBinFolder = xmlDoc.SelectSingleNode("root/websitebinfoldermappath");
-                if (websiteBinFolder != null) _websiteBinFolder = websiteBinFolder.InnerText;
-                Console.WriteLine("WebsiteBinFolder: " + _websiteBinFolder);
+                XmlNode websiteFolder = xmlDoc.SelectSingleNode("root/websitemappath");
+                if (websiteFolder != null) _websiteFolder = websiteFolder.InnerText;
+                Console.WriteLine("WebsiteFolder: " + _websiteFolder);
+                if (_websiteFolder != "" && _websitedestrelpath != "")
+                {
+                    _websiteBinFolder = _websiteFolder.TrimEnd('\\') + "\\" + _websitedestbinrelpath.Replace("/", "\\").TrimStart('\\');
+                    _websiteDestFolder = _websiteFolder.TrimEnd('\\') + "\\" + _websitedestrelpath.Replace("/", "\\").TrimStart('\\');
+                }
+                else
+                {
+                    XmlNode websiteBinFolder = xmlDoc.SelectSingleNode("root/websitebinfoldermappath");
+                    if (websiteBinFolder != null) _websiteBinFolder = websiteBinFolder.InnerText;
+                    Console.WriteLine("WebsiteBinFolder: " + _websiteBinFolder);
 
-                XmlNode websiteDestFolder = xmlDoc.SelectSingleNode("root/websitedestfoldermappath");
-                if (websiteDestFolder != null) _websiteDestFolder = websiteDestFolder.InnerText;
-                Console.WriteLine("WebsiteDestFolder: " + _websiteDestFolder);
+                    XmlNode websiteDestFolder = xmlDoc.SelectSingleNode("root/websitedestfoldermappath");
+                    if (websiteDestFolder != null) _websiteDestFolder = websiteDestFolder.InnerText;
+                    Console.WriteLine("WebsiteDestFolder: " + _websiteDestFolder);
+                }
 
             }
             catch (System.Exception excpt)
