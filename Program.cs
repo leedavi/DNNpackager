@@ -37,7 +37,7 @@ namespace DNNpackager
                 Console.WriteLine("START DNNpackager");
                 
                 // Sleep if we need to debug, so we can attach debugger
-                //Thread.Sleep(8000);
+                // Thread.Sleep(8000);
 
                 if (args.Length >= 1)
                 {
@@ -397,22 +397,26 @@ namespace DNNpackager
                 XmlNode websiteFolder = xmlDoc.SelectSingleNode("root/websitemappath");
                 if (websiteFolder != null) _websiteFolder = websiteFolder.InnerText;
                 Console.WriteLine("WebsiteFolder: " + _websiteFolder);
-                if (_websiteFolder != "" && _websitedestrelpath != "")
+                if (!string.IsNullOrEmpty(_websiteFolder) && !string.IsNullOrEmpty(_websitedestrelpath))
                 {
+                    // both websitefolder and destrelpath are used, so take these to determine binfolder and destfolder
                     _websiteBinFolder = _websiteFolder.TrimEnd('\\') + "\\" + _websitedestbinrelpath.Replace("/", "\\").TrimStart('\\');
                     _websiteDestFolder = _websiteFolder.TrimEnd('\\') + "\\" + _websitedestrelpath.Replace("/", "\\").TrimStart('\\');
                 }
                 else
                 {
+                    // try to use root/websitebinfoldermappath and "root/websitedestfoldermappath to get the paths
                     XmlNode websiteBinFolder = xmlDoc.SelectSingleNode("root/websitebinfoldermappath");
                     if (websiteBinFolder != null) _websiteBinFolder = websiteBinFolder.InnerText;
-                    Console.WriteLine("WebsiteBinFolder: " + _websiteBinFolder);
 
                     XmlNode websiteDestFolder = xmlDoc.SelectSingleNode("root/websitedestfoldermappath");
                     if (websiteDestFolder != null) _websiteDestFolder = websiteDestFolder.InnerText;
-                    Console.WriteLine("WebsiteDestFolder: " + _websiteDestFolder);
                 }
-
+                // if we still don't have binfolder or destfolder, build them from relpaths and websitepath
+                if (string.IsNullOrEmpty(_websiteBinFolder)) _websiteBinFolder = _websiteFolder + _websitedestbinrelpath;
+                if (string.IsNullOrEmpty(_websiteDestFolder)) _websiteDestFolder = _websiteFolder + _websitedestrelpath;
+                Console.WriteLine("WebsiteBinFolder: " + _websiteBinFolder);
+                Console.WriteLine("WebsiteDestFolder: " + _websiteDestFolder);
             }
             catch (System.Exception excpt)
             {
