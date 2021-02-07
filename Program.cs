@@ -37,7 +37,7 @@ namespace DNNpackager
                 Console.WriteLine("START DNNpackager");
                 
                 // Sleep if we need to debug, so we can attach debugger
-                // Thread.Sleep(8000);
+                //Thread.Sleep(8000);
 
                 if (args.Length >= 1)
                 {
@@ -176,6 +176,11 @@ namespace DNNpackager
                                         File.Copy(fileIncludePath, dest, true);
                                     }
                                 }
+                            }
+
+                            if (configurationName.ToLower() == "release" && !dnnFileExists)
+                            {
+                                Console.WriteLine("ERROR: NO DNN manifesto to build install package.");
                             }
 
                             if (configurationName.ToLower() == "release" && dnnFileExists)
