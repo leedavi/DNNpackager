@@ -180,7 +180,7 @@ namespace DNNpackager
 
                             if (configurationName.ToLower() == "release" && !dnnFileExists)
                             {
-                                Console.WriteLine("ERROR: NO DNN manifesto to build install package.");
+                                Console.WriteLine("NO DNN manifesto to build install package.");
                             }
 
                             if (configurationName.ToLower() == "release" && dnnFileExists)
