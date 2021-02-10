@@ -34,7 +34,7 @@ namespace DNNpackager
         {
             try
             {
-                Console.WriteLine("START DNNpackager");
+                Console.WriteLine("##################### START DNNpackager ##################### ");
                 
                 // Sleep if we need to debug, so we can attach debugger
                 //Thread.Sleep(8000);
@@ -203,13 +203,13 @@ namespace DNNpackager
                         Console.WriteLine("Config file missing: " + configPath);
                     }
 
-                    Console.WriteLine("++++++++++++++++++++++++++ " + configurationName.ToUpper() + " ++++++++++++++++++++++++++");
                     if (configurationName != "release" && configurationName != "debug")
                     {
                         Console.WriteLine("***** SYNC FILES ONLY *******");
                     }
                 }
-                Console.WriteLine("END DNNpackager.");
+                Console.WriteLine("WebsiteFolder: " + _websiteFolder);
+                Console.WriteLine("##################### END DNNpackager #####################  " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
                 //Console.ReadKey();
             }
             catch (Exception ex)
