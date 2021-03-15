@@ -13,7 +13,7 @@ Example:
   <websitedestrelpath>\DesktopModules\DNNrocket\AppThemes</websitedestrelpath>
   <websitedestbinrelpath>\bin</websitedestbinrelpath>
   <!-- Include only files that match the regular expression -->
-	<regexpr>(\.cshtml|\.html|\.resx|\.dnn|\.png|\.jpg|\.gif|\.css|\.js|\.xml|\.txt|\.md|\.aspx|\.ascx|\.ashx)$</regexpr>	
+	<regexpr>(\.cshtml|\.html|\.resx|\.dnn|\.png|\.jpg|\.gif|\.css|.\svg|\.js|\.xml|\.txt|\.md|\.aspx|\.ascx|\.ashx|\.woff|\.woff2|\.ttf)$</regexpr>
 	<directory include='false'>
 		<!-- All paths should be from the source root (project root) -->
 		<value>\.git</value>
