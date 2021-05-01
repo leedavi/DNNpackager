@@ -37,7 +37,7 @@ namespace DNNpackager
                 Console.WriteLine("##################### START DNNpackager ##################### ");
                 
                 // Sleep if we need to debug, so we can attach debugger
-                //Thread.Sleep(8000);
+                //Thread.Sleep(10000);
 
                 if (args.Length >= 1)
                 {
@@ -215,6 +215,7 @@ namespace DNNpackager
             catch (Exception ex)
             {
                 Console.WriteLine("ERROR: " + ex.ToString());
+                Thread.Sleep(10000);
                 //Console.WriteLine("Press any key.");
                 //Console.ReadKey();
             }
