@@ -100,7 +100,7 @@ namespace DNNpackager
                             if (configurationName != "release" && configurationName != "debug")
                                 SyncAll(diSource, diTarget); // take the oldest file in GIT and on Website. usualy for Razor Templates.
                             else
-                                CopyAll(diSource, diTarget);
+                                CopyAll(diSource, diTarget, configurationName);
                         }
 
                         // get the .dnn files to the root.
@@ -275,7 +275,7 @@ namespace DNNpackager
                 SyncAll(diSourceSubDir, nextTargetSubDir);
             }
         }
-        static void CopyAll(DirectoryInfo source, DirectoryInfo target)
+        static void CopyAll(DirectoryInfo source, DirectoryInfo target, string configurationName)
         {
             Directory.CreateDirectory(target.FullName);
 
@@ -286,7 +286,7 @@ namespace DNNpackager
                 {
                     var fileSourceDate = File.GetLastWriteTime(Path.Combine(source.FullName, fi.Name));
                     var fileDestDate = File.GetLastWriteTime(Path.Combine(target.FullName, fi.Name));
-                    if (fileSourceDate > fileDestDate)
+                    if (fileSourceDate > fileDestDate || configurationName == "release")
                     {
                         Console.WriteLine("Overwrite: " + Path.Combine(target.FullName, fi.Name));
                         fi.CopyTo(Path.Combine(target.FullName, fi.Name), true);
@@ -303,7 +303,7 @@ namespace DNNpackager
             foreach (DirectoryInfo diSourceSubDir in source.GetDirectories())
             {
                 DirectoryInfo nextTargetSubDir = target.CreateSubdirectory(diSourceSubDir.Name);
-                CopyAll(diSourceSubDir, nextTargetSubDir);
+                CopyAll(diSourceSubDir, nextTargetSubDir, configurationName);
             }
         }
         static string GetdnnpackFileMapPath(string dnnpackMapPath, int level)
