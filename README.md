@@ -49,9 +49,11 @@ Running From VS
 
 The operation is most easily ran from the "Post Build Event".  This automates the transfer of files from the working folders to the website folders.
 
-The DNNpackager takes 1 or 3 arguments.  
+The DNNpackager takes 1, 2 or 3 arguments.  
 
 DNNpackager.exe \<ProjectDir\>\<Config Name (optional)\>
+
+DNNpackager.exe \<ProjectDir\>\<Config Name (optional)\> \<ConfigurationName\>
 
 DNNpackager.exe \<ProjectDir\>\<Config Name (optional)\> \<CopyDestination\> \<BinSource\> \<BinDestination\> \<ConfigurationName\>
 
@@ -184,5 +186,16 @@ The "dnnpack.config" file should be placed in ```DevFolder > Projects``` folder.
 The allows you to have multiple projects under 1 folder, that all use the same "dnnpack.config" file and hence the same website.
 
 
+RUN AS ADMINISTRATOR
+--------------------
 
+You should run with administrator right, the BAT file below helps to do this.  right click the BAT file and "Run as Administrator".
+
+```
+REM ******** RUN AS ADMIN ***************
+
+DNNpackager.exe %~dp0DNNpackager.dnnpack razor
+
+PAUSE
+```
 

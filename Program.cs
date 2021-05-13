@@ -48,6 +48,10 @@ namespace DNNpackager
 
                     var binSource = "";
                     var configurationName = "release";
+                    if (args.Length == 2)
+                    {
+                        configurationName = args[1].ToLower();
+                    }
                     if (args.Length == 3)
                     {
                         binSource = args[1];
