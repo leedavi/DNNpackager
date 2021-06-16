@@ -105,18 +105,11 @@ namespace DNNpackager
                         {
                             var diSource = new DirectoryInfo(_resourcesPath);
                             var diTarget = new DirectoryInfo(_websiteDestFolder);
-
-                            //if (configurationName != "release" && configurationName != "debug")
-                            //{
+                            if (_websiteDestFolder != "") // we may only want to build install zip.
+                            {
                                 Console.WriteLine("--- Sync All : Take oldest file ---");
                                 SyncAll(diSource, diTarget); // take the oldest file in GIT and on Website. usualy for Razor Templates.
-                            //}
-                            //else
-                            //{
-                            //    Console.WriteLine("--- Copy All ---");
-                            //    CopyAll(diSource, diTarget, configurationName);
-                            //    Console.WriteLine(diSource + " ---> " + diTarget);
-                            //}
+                            }
                         }
 
                         // get the .dnn files to the root.
@@ -455,7 +448,7 @@ namespace DNNpackager
                 }
                 // if we still don't have binfolder or destfolder, build them from relpaths and websitepath
                 if (string.IsNullOrEmpty(_websiteBinFolder)) _websiteBinFolder = _websiteFolder + _websitedestbinrelpath;
-                if (string.IsNullOrEmpty(_websiteDestFolder)) _websiteDestFolder = _websiteFolder + _websitedestrelpath;
+                if (string.IsNullOrEmpty(_websiteDestFolder) && !string.IsNullOrEmpty(_websitedestrelpath)) _websiteDestFolder = _websiteFolder + _websitedestrelpath;
                 //Console.WriteLine("WebsiteBinFolder: " + _websiteBinFolder);
                 //Console.WriteLine("WebsiteDestFolder: " + _websiteDestFolder);
             }
