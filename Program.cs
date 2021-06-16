@@ -30,6 +30,8 @@ namespace DNNpackager
         private static string _websiteBinFolder;
         private static string _websiteDestFolder;
 
+        private static bool _nocompile;
+
         static void Main(string[] args)
         {
             try
@@ -45,6 +47,7 @@ namespace DNNpackager
 
                     _websiteBinFolder = "";
                     _websiteDestFolder = "";
+                    _nocompile = false;
 
                     var binSource = "";
                     var configurationName = "release";
@@ -57,8 +60,9 @@ namespace DNNpackager
                         binSource = args[1];
                         configurationName = args[2].ToLower();
                     }
+                    if (configurationName == "razor" || configurationName.StartsWith("nc-")) _nocompile = true;
 
-                    var configPath = args[0];
+                        var configPath = args[0];
                     if (Path.GetFileName(configPath) == "")
                     {
                         // Search for dnnpack file.
@@ -92,6 +96,7 @@ namespace DNNpackager
                         SetupConfig(configPath);
 
                         // do recursive copy files
+                        Console.WriteLine("--- Folder Search ---");
                         DirCopy(_sourceRootPath); // copy root without recursive
                         DirSearch(_sourceRootPath, 0);
 
@@ -101,10 +106,17 @@ namespace DNNpackager
                             var diSource = new DirectoryInfo(_resourcesPath);
                             var diTarget = new DirectoryInfo(_websiteDestFolder);
 
-                            if (configurationName != "release" && configurationName != "debug")
+                            //if (configurationName != "release" && configurationName != "debug")
+                            //{
+                                Console.WriteLine("--- Sync All : Take oldest file ---");
                                 SyncAll(diSource, diTarget); // take the oldest file in GIT and on Website. usualy for Razor Templates.
-                            else
-                                CopyAll(diSource, diTarget, configurationName);
+                            //}
+                            //else
+                            //{
+                            //    Console.WriteLine("--- Copy All ---");
+                            //    CopyAll(diSource, diTarget, configurationName);
+                            //    Console.WriteLine(diSource + " ---> " + diTarget);
+                            //}
                         }
 
                         // get the .dnn files to the root.
@@ -135,8 +147,10 @@ namespace DNNpackager
                         }
 
                         // Add assemblies - They are placed on the root folder.
-                        if (configurationName == "release" || configurationName == "debug")
+                        if (!_nocompile)
                         {
+                            Console.WriteLine("--- Copy Assemblies and Resource Zip ---");
+
                             //ZIP resouce and delete temp folders
                             ZipFile.CreateFromDirectory(_resourcesPath, destPath + "\\Resource.zip");
                             Directory.Delete(_resourcesPath, true);
@@ -189,6 +203,7 @@ namespace DNNpackager
 
                             if (configurationName.ToLower() == "release" && dnnFileExists)
                             {
+                                Console.WriteLine("--- Build Installation Package ---");
                                 //ZIP temp folder into package on the project install folder.
                                 if (_name == "") _name = dirName;
                                 var zipFilePath = _sourceRootPath + "\\Installation\\" + _name + "_" + _version + "_Install.zip";
@@ -207,12 +222,13 @@ namespace DNNpackager
                         Console.WriteLine("Config file missing: " + configPath);
                     }
 
-                    if (configurationName != "release" && configurationName != "debug")
+                    if (_nocompile)
                     {
                         Console.WriteLine("***** SYNC FILES ONLY *******");
                     }
                 }
-                Console.WriteLine("WebsiteFolder: " + _websiteFolder);
+                Console.WriteLine("##################### WEBSITE FOLDER #####################  ");
+                Console.WriteLine(_websiteFolder);
                 Console.WriteLine("##################### END DNNpackager #####################  " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
                 //Console.ReadKey();
             }
@@ -229,9 +245,11 @@ namespace DNNpackager
             Directory.CreateDirectory(webDir.FullName);
 
             var gitList = new List<FileInfo>();
-            foreach (FileInfo fi in gitDir.GetFiles()) { gitList.Add(fi); }
             var webList = new List<FileInfo>();
-            foreach (FileInfo fi in webDir.GetFiles()) { webList.Add(fi); }
+            var gitListNames = new List<string>();
+            var webListNames = new List<string>();
+            foreach (FileInfo fi in gitDir.GetFiles()) { gitList.Add(fi); gitListNames.Add(Path.GetFileName(fi.Name)); }
+            foreach (FileInfo fi in webDir.GetFiles()) { webList.Add(fi); webListNames.Add(Path.GetFileName(fi.Name)); }
 
             // copy any newer files from website to git repo
             foreach (var fi in webList)
@@ -242,17 +260,17 @@ namespace DNNpackager
                     var fileGitDate = File.GetLastWriteTime(Path.Combine(gitDir.FullName, fi.Name));
                     if (fileGitDate < fileWebDate)
                     {
-                        Console.WriteLine("Pull: " + fi.Name);
+                        Console.WriteLine("Pull: " + Path.Combine(gitDir.FullName, fi.Name));
                         fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Pull: " + fi.Name);
-                    fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
+                    //Console.WriteLine("Pull: " + fi.Name);
+                    //fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
                 }
             }
-            // copy any newer files from git repoto website
+            // copy any newer files from git repo to website
             foreach (var fi in gitList)
             {
                 if (File.Exists(Path.Combine(webDir.FullName, fi.Name)))
@@ -269,6 +287,16 @@ namespace DNNpackager
                 {
                     Console.WriteLine("CopyTo: " + Path.Combine(webDir.FullName, fi.Name));
                     fi.CopyTo(Path.Combine(webDir.FullName, fi.Name), true);
+                }
+            }
+            // remove any files in webiste that do not exists in the Git Repo
+            foreach (var fi in webList)
+            {
+                if (!gitListNames.Contains(Path.GetFileName(fi.Name)))
+                {
+                    fi.CopyTo(Path.Combine(webDir.FullName, Path.GetFileNameWithoutExtension(fi.Name)), true);
+                    File.Delete(Path.Combine(webDir.FullName, fi.Name));
+                    Console.WriteLine("Delete: " + Path.Combine(webDir.FullName, fi.Name));
                 }
             }
 
@@ -406,7 +434,7 @@ namespace DNNpackager
 
                 XmlNode websiteFolder = xmlDoc.SelectSingleNode("root/websitemappath");
                 if (websiteFolder != null) _websiteFolder = websiteFolder.InnerText;
-                Console.WriteLine("WebsiteFolder: " + _websiteFolder);
+                //Console.WriteLine("WebsiteFolder: " + _websiteFolder);
                 if (!string.IsNullOrEmpty(_websiteFolder) && !string.IsNullOrEmpty(_websitedestrelpath))
                 {
                     // both websitefolder and destrelpath are used, so take these to determine binfolder and destfolder
@@ -425,8 +453,8 @@ namespace DNNpackager
                 // if we still don't have binfolder or destfolder, build them from relpaths and websitepath
                 if (string.IsNullOrEmpty(_websiteBinFolder)) _websiteBinFolder = _websiteFolder + _websitedestbinrelpath;
                 if (string.IsNullOrEmpty(_websiteDestFolder)) _websiteDestFolder = _websiteFolder + _websitedestrelpath;
-                Console.WriteLine("WebsiteBinFolder: " + _websiteBinFolder);
-                Console.WriteLine("WebsiteDestFolder: " + _websiteDestFolder);
+                //Console.WriteLine("WebsiteBinFolder: " + _websiteBinFolder);
+                //Console.WriteLine("WebsiteDestFolder: " + _websiteDestFolder);
             }
             catch (System.Exception excpt)
             {

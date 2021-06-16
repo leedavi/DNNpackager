@@ -77,6 +77,8 @@ DNNpackager.exe  $(ProjectDir) $(ProjectDir)$(OutDir) $(ConfigurationName)
 
 ```
 
+**NOTE:** If the **\<ConfigurationName\>** is "razor" or starts with "nc-" DNNpackager will assume no compile has been made and will not copy the assemblies to the destination.
+
 
 dnnpack.config File
 ---------------
@@ -107,7 +109,11 @@ If ONLY the $(ProjectDir) argument is passed to DNNpacker, a DNN install will be
 
 If more arguments are passed DNNpackager can move files from your repo working area to your dev website area. This will allow you to create only 1 GIT repo on you dev machine and use it on multiple websites.
 
-Files from the working area will be copied to the website folders.
+Files from the working area will be copied to the website folders.  
+
+Any website files older than the source folder will be pulled to the git folder. 
+
+Files that do not exist in the source, but exist on the website will have the extension removed so they are not used by the webiste.  If a file must be included then it should be manually copied to the source folder.
 
 A $(ProjectDir)\Installation folder should always be created. 
 
@@ -118,7 +124,7 @@ Copy Razor templates
 
 When we copy razor templates we do not wish to compile and copy the assemblies.  (Doing this will cause the AppPool to recycle)
 
-We create a config in the VS project called "Razor" (or any other name apart from "release" and "debug") that has ALL project compile turned off.  We can use this to Sync the razor templates.  Any templates on the website folder will be copied to the Git project folder if they are newer than the Git file. And the same copy/sync rules apply for copying the Git working area files to the website.
+We create a config in the VS project called "Razor" (or any other name starting with "nc-") that has ALL project compile turned off.  We can use this to Sync the razor templates.  Any templates on the website folder will be copied to the Git project folder if they are newer than the Git file. And the same copy/sync rules apply for copying the Git working area files to the website.
 
 
 VS External Tool
