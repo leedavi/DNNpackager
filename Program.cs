@@ -294,9 +294,12 @@ namespace DNNpackager
             {
                 if (!gitListNames.Contains(Path.GetFileName(fi.Name)))
                 {
-                    fi.CopyTo(Path.Combine(webDir.FullName, Path.GetFileNameWithoutExtension(fi.Name)), true);
-                    File.Delete(Path.Combine(webDir.FullName, fi.Name));
-                    Console.WriteLine("Delete: " + Path.Combine(webDir.FullName, fi.Name));
+                    if (Path.GetExtension(fi.Name) != "")
+                    {
+                        fi.CopyTo(Path.Combine(webDir.FullName, Path.GetFileNameWithoutExtension(fi.Name)), true);
+                        File.Delete(Path.Combine(webDir.FullName, fi.Name));
+                        Console.WriteLine("Delete: " + Path.Combine(webDir.FullName, fi.Name));
+                    }
                 }
             }
 
