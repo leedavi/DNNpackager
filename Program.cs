@@ -247,51 +247,72 @@ namespace DNNpackager
             // copy any newer files from website to git repo
             foreach (var fi in webList)
             {
-                if (File.Exists(Path.Combine(gitDir.FullName, fi.Name)))
+                if (Path.GetExtension(fi.Name) == "")
                 {
-                    var fileWebDate = fi.LastWriteTime;
-                    var fileGitDate = File.GetLastWriteTime(Path.Combine(gitDir.FullName, fi.Name));
-                    if (fileGitDate < fileWebDate)
-                    {
-                        Console.WriteLine("Pull: " + Path.Combine(gitDir.FullName, fi.Name));
-                        fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
-                    }
+                    Console.WriteLine("WARNING: No file extension.  (Not Processed)  " + fi.FullName);
                 }
                 else
                 {
-                    //Console.WriteLine("Pull: " + fi.Name);
-                    //fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
+                    if (File.Exists(Path.Combine(gitDir.FullName, fi.Name)))
+                    {
+                        var fileWebDate = fi.LastWriteTime;
+                        var fileGitDate = File.GetLastWriteTime(Path.Combine(gitDir.FullName, fi.Name));
+                        if (fileGitDate < fileWebDate)
+                        {
+                            Console.WriteLine("Pull: " + Path.Combine(gitDir.FullName, fi.Name));
+                            fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
+                        }
+                    }
+                    else
+                    {
+                        //Console.WriteLine("Pull: " + fi.Name);
+                        //fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
+                    }
                 }
             }
             // copy any newer files from git repo to website
             foreach (var fi in gitList)
             {
-                if (File.Exists(Path.Combine(webDir.FullName, fi.Name)))
+                if (Path.GetExtension(fi.Name) == "")
                 {
-                    var fileGitDate = fi.LastWriteTime;
-                    var fileWebDate = File.GetLastWriteTime(Path.Combine(webDir.FullName, fi.Name));
-                    if (fileGitDate > fileWebDate)
+                    Console.WriteLine("WARNING: No file extension.  (Not Processed)  " + fi.FullName);
+                }
+                else
+                {
+                    if (File.Exists(Path.Combine(webDir.FullName, fi.Name)))
+                    {
+                        var fileGitDate = fi.LastWriteTime;
+                        var fileWebDate = File.GetLastWriteTime(Path.Combine(webDir.FullName, fi.Name));
+                        if (fileGitDate > fileWebDate)
+                        {
+                            Console.WriteLine("CopyTo: " + Path.Combine(webDir.FullName, fi.Name));
+                            fi.CopyTo(Path.Combine(webDir.FullName, fi.Name), true);
+                        }
+                    }
+                    else
                     {
                         Console.WriteLine("CopyTo: " + Path.Combine(webDir.FullName, fi.Name));
                         fi.CopyTo(Path.Combine(webDir.FullName, fi.Name), true);
                     }
                 }
-                else
-                {
-                    Console.WriteLine("CopyTo: " + Path.Combine(webDir.FullName, fi.Name));
-                    fi.CopyTo(Path.Combine(webDir.FullName, fi.Name), true);
-                }
             }
             // remove any files in webiste that do not exists in the Git Repo
             foreach (var fi in webList)
             {
-                if (!gitListNames.Contains(Path.GetFileName(fi.Name)))
+                if (Path.GetExtension(fi.Name) == "")
                 {
-                    if (Path.GetExtension(fi.Name) != "")
+                    Console.WriteLine("WARNING: No file extension.  (Not Processed)  " + fi.FullName);
+                }
+                else
+                {
+                    if (!gitListNames.Contains(Path.GetFileName(fi.Name)))
                     {
-                        fi.CopyTo(Path.Combine(webDir.FullName, Path.GetFileNameWithoutExtension(fi.Name)), true);
-                        File.Delete(Path.Combine(webDir.FullName, fi.Name));
-                        Console.WriteLine("Delete: " + Path.Combine(webDir.FullName, fi.Name));
+                        if (Path.GetExtension(fi.Name) != "")
+                        {
+                            fi.CopyTo(Path.Combine(webDir.FullName, Path.GetFileNameWithoutExtension(fi.Name)), true);
+                            File.Delete(Path.Combine(webDir.FullName, fi.Name));
+                            Console.WriteLine("Delete: " + Path.Combine(webDir.FullName, fi.Name));
+                        }
                     }
                 }
             }
