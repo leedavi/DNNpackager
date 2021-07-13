@@ -63,6 +63,12 @@ arg2 - **\<BinSource\>** = The bin folder of the source module.  In VS tokens it
 
 arg3 - **\<ConfigurationName\>** = The VS configuration. \$(ConfigurationName) (optional)
 
+**"/clean"** option can be added to the command.  This option will delete files on the "copy website" that do not exist in the project.  Use caution when using this, runtime files that have been added for plugin operations will be removed.
+
+```
+DNNpackager.exe $(ProjectDir) $(ProjectDir)$(OutDir) $(ConfigurationName) /clean
+```
+
 Example from VS post build event:
 ```
 

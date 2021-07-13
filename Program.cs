@@ -32,15 +32,19 @@ namespace DNNpackager
 
         private static bool _nocompile;
 
+        // options (args > 3)
+        private static bool _repofilesdelete;
+
         static void Main(string[] args)
         {
             try
             {
                 Console.WriteLine("##################### START DNNpackager ##################### ");
-                
+
                 // Sleep if we need to debug, so we can attach debugger
                 //Thread.Sleep(10000);
 
+                _repofilesdelete = false; // Delete files in the website that don't exist in the repo;
                 if (args.Length >= 1)
                 {
                     if (args.Length == 1) Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
@@ -60,6 +64,9 @@ namespace DNNpackager
                         binSource = args[1];
                         configurationName = args[2].ToLower();
                     }
+
+                    if (args.Contains("/clean")) _repofilesdelete = true;
+
                     if (configurationName == "razor" || configurationName.StartsWith("nc-")) _nocompile = true;
 
                         var configPath = args[0];
@@ -78,6 +85,7 @@ namespace DNNpackager
                     Console.WriteLine("ProjectFolder: " + _sourceRootPath);
                     Console.WriteLine("binSource: " + binSource);
                     Console.WriteLine("ConfigurationName: " + configurationName);
+                    Console.WriteLine("Clean: " + _repofilesdelete.ToString());
 
                     if (Directory.Exists(_sourceRootPath) && File.Exists(configPath))
                     {
@@ -297,20 +305,25 @@ namespace DNNpackager
                 }
             }
             // remove any files in webiste that do not exists in the Git Repo
-            foreach (var fi in webList)
+            // This process is a problem for plugins, where files may have been added to the project at runtime.
+            // We therefore only delete files when the "/clean" options has been added to the command args[].
+            if (_repofilesdelete)
             {
-                if (Path.GetExtension(fi.Name) == "")
+                foreach (var fi in webList)
                 {
-                    Console.WriteLine("WARNING: No file extension.  (Not Processed)  " + fi.FullName);
-                }
-                else
-                {
-                    if (!gitListNames.Contains(Path.GetFileName(fi.Name)))
+                    if (Path.GetExtension(fi.Name) == "")
                     {
-                        if (Path.GetExtension(fi.Name) != "")
+                        Console.WriteLine("WARNING: No file extension.  (Not Processed)  " + fi.FullName);
+                    }
+                    else
+                    {
+                        if (!gitListNames.Contains(Path.GetFileName(fi.Name)))
                         {
-                            File.Delete(Path.Combine(webDir.FullName, fi.Name));
-                            Console.WriteLine("Delete: " + Path.Combine(webDir.FullName, fi.Name));
+                            if (Path.GetExtension(fi.Name) != "")
+                            {
+                                File.Delete(Path.Combine(webDir.FullName, fi.Name));
+                                Console.WriteLine("Delete: " + Path.Combine(webDir.FullName, fi.Name));
+                            }
                         }
                     }
                 }
