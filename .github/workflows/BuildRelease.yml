@@ -81,7 +81,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
       with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./DNNpackager/DNNpackagerInstall/Release/DNNpackagerInstall.msi
+          asset_path: ./DNNpackagerInstall/Release/DNNpackagerInstall.msi
           asset_name: DNNpackagerInstall.msi
           asset_content_type: application/x-msi
 
@@ -92,6 +92,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
       with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./DNNpackager/DNNpackagerInstall/Release/setup.exe
+          asset_path: ./DNNpackagerInstall/Release/setup.exe
           asset_name: setup.exe
           asset_content_type: application/octet-stream
