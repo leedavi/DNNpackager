@@ -17,7 +17,7 @@ jobs:
         dotnet-version: 6.0.x
 
     - name: Restore dependencies
-      run: dotnet restore DNNPackager.csproj
+      run: dotnet restore DNNpackager.csproj
 
     - name: Get Release Branch Version
       uses: valadas/get-release-branch-version@v1.0.1
