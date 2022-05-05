@@ -19,12 +19,16 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore DNNPackager.csproj
 
+    - name: Get Release Branch Version
+      uses: valadas/get-release-branch-version@v1.0.1
+      id: branchVersion
+
     - name: Build
       run: dotnet build DNNPackager.csproj --no-restore --configuration Release
 
     - name: Pack
       run: dotnet pack DNNPackager.csproj
-
+      
     - name: Create Release Notes
       uses: johnyherangi/create-release-notes@main
       id: create-release-notes
