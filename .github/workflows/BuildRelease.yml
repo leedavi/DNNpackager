@@ -75,7 +75,7 @@ jobs:
           }
 
     - name: Upload .msi Release Asset
-      id: upload-release-asset 
+      id: upload-release-msi 
       uses: actions/upload-release-asset@v1
       env:
           GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
@@ -86,7 +86,7 @@ jobs:
           asset_content_type: application/x-msi
 
     - name: Upload .exe Release Asset
-      id: upload-release-asset 
+      id: upload-release-exe 
       uses: actions/upload-release-asset@v1
       env:
           GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
