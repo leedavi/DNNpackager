@@ -64,17 +64,18 @@ jobs:
       with:
         type: 'zip'
         path: ./bin/netcoreapp3.1
+        directory: ./bin/netcoreapp3.1
         filename: 'DNNpackager_v${{ steps.branchVersion.outputs.major }}.${{ steps.branchVersion.outputs.minor }}.${{ steps.branchVersion.outputs.patch }}.zip'
-        exclusions: '/bin/netcoreapp3.1 /bin *.json *.pdb'
+        exclusions: '*.json *.pdb'
 
     - name: Upload Zip Release Asset
-      id: upload-release-msi 
+      id: upload-release-zip
       uses: actions/upload-release-asset@v1
       env:
           GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
       with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./DNNpackager_v${{ steps.branchVersion.outputs.major }}.${{ steps.branchVersion.outputs.minor }}.${{ steps.branchVersion.outputs.patch }}.zip
+          asset_path: ./bin/netcoreapp3.1/DNNpackager_v${{ steps.branchVersion.outputs.major }}.${{ steps.branchVersion.outputs.minor }}.${{ steps.branchVersion.outputs.patch }}.zip
           asset_name: DNNpackager_v${{ steps.branchVersion.outputs.major }}.${{ steps.branchVersion.outputs.minor }}.${{ steps.branchVersion.outputs.patch }}.zip
           asset_content_type: application/zip
 
