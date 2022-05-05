@@ -24,10 +24,10 @@ jobs:
       id: branchVersion
 
     - name: Build
-      run: dotnet build DNNPackager.csproj --no-restore --configuration Release
+      run: dotnet build DNNpackager.csproj --no-restore --configuration Release
 
     - name: Pack
-      run: dotnet pack DNNPackager.csproj
+      run: dotnet pack DNNpackager.csproj
       
     - name: Create Release Notes
       uses: johnyherangi/create-release-notes@main
