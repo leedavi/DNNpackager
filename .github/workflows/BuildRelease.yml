@@ -1,0 +1,93 @@
+name: Build Release
+
+on:
+  create:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    if: ${{ github.event.ref_type == 'branch' && startsWith(github.event.ref, 'release/') }}
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore DNNPackager.csproj
+
+    - name: Build
+      run: dotnet build DNNPackager.csproj --no-restore --configuration Release
+
+    - name: Pack
+      run: dotnet pack DNNPackager.csproj
+
+    - name: Create Release Notes
+      uses: johnyherangi/create-release-notes@main
+      id: create-release-notes
+      env:
+          GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
+      with:
+          tag_name: v${{ steps.branchVersion.outputs.major }}.${{ steps.branchVersion.outputs.minor }}.${{ steps.branchVersion.outputs.patch }}
+          release_name: DnnPackager v${{ steps.branchVersion.outputs.major }}.${{ steps.branchVersion.outputs.minor }}.${{ steps.branchVersion.outputs.patch }}
+          body: ${{ steps.create-release-notes.outputs.release-notes }}
+          draft: true
+          prerelease: true
+
+    - name: Create Nuget Feed Source
+      run: dotnet nuget add source --username WorkflowRunner --password ${{ secrets.CI_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/openstore-ecommerce/index.json"
+
+    - name: Push Nuget
+      run: dotnet nuget push "bin/**.nupkg" --skip-duplicate --api-key ${{ secrets.CI_TOKEN }} --source "https://nuget.pkg.github.com/openstore-ecommerce/index.json"
+
+    - name: Upload Source Zip
+      uses: actions/github-script@v3
+      with:
+       github-token: ${{secrets.CI_TOKEN}}
+       script: |
+        const path = require('path');
+        const fs = require('fs');
+        const release_id = '${{ needs.create_release.outputs.id }}';
+          for (let file of await fs.readdirSync('./')) {
+            if (path.extname(file) === '.zip') {
+              console.log('uploadReleaseAsset', file);
+              await github.repos.uploadReleaseAsset({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: release_id,
+                name: file,
+                data: await fs.readFileSync(`./${file}`)
+              });
+            }
+          }
+
+    - name: Upload .msi Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
+      with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./DNNpackager/DNNpackagerInstall/Release/DNNpackagerInstall.msi
+          asset_name: DNNpackagerInstall.msi
+          asset_content_type: application/x-msi
+
+    - name: Upload .exe Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
+      with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./DNNpackager/DNNpackagerInstall/Release/setup.exe
+          asset_name: setup.exe
+          asset_content_type: application/octet-stream
