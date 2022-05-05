@@ -24,7 +24,7 @@ jobs:
       id: branchVersion
 
     - name: Build
-      run: dotnet build DNNpackager.csproj --no-restore --configuration Release
+      run: dotnet build DNNpackager.sln --no-restore --configuration Release
 
     - name: Pack
       run: dotnet pack DNNpackager.csproj
