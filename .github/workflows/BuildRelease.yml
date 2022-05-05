@@ -65,7 +65,7 @@ jobs:
         type: 'zip'
         path: ./bin/netcoreapp3.1
         filename: 'DNNpackager_v${{ steps.branchVersion.outputs.major }}.${{ steps.branchVersion.outputs.minor }}.${{ steps.branchVersion.outputs.patch }}.zip'
-        exclusions: '*.json *.pdb'
+        exclusions: '/bin/netcoreapp3.1 /bin *.json *.pdb'
 
     - name: Upload Zip Release Asset
       id: upload-release-msi 
