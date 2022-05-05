@@ -6,7 +6,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     if: ${{ github.event.ref_type == 'branch' && startsWith(github.event.ref, 'release/') }}
 
     steps:
@@ -17,14 +17,14 @@ jobs:
         dotnet-version: 6.0.x
 
     - name: Restore dependencies
-      run: dotnet restore DNNpackager.sln
+      run: dotnet restore DNNpackager.csproj
 
     - name: Get Release Branch Version
       uses: valadas/get-release-branch-version@v1.0.1
       id: branchVersion
 
     - name: Build
-      run: dotnet build DNNpackager.proj --no-restore --configuration Release
+      run: dotnet build DNNpackager.csproj --no-restore --configuration Release
 
     - name: Build Install
       run: dotnet build ./DNNpackagerIntall/DNNpackagerInstall.vdproj --no-restore --configuration Release
