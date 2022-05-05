@@ -50,8 +50,8 @@ jobs:
     - name: Create Nuget Feed Source
       run: dotnet nuget add source --username WorkflowRunner --password ${{ secrets.CI_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/openstore-ecommerce/index.json"
 
-    - name: Push Nuget
-      run: dotnet nuget push "bin/**.nupkg" --skip-duplicate --api-key ${{ secrets.CI_TOKEN }} --source "https://nuget.pkg.github.com/openstore-ecommerce/index.json"
+    #- name: Push Nuget
+    #  run: dotnet nuget push "bin/**.nupkg" --skip-duplicate --api-key ${{ secrets.CI_TOKEN }} --source "https://nuget.pkg.github.com/openstore-ecommerce/index.json"
 
     - name: Upload Source Zip
       uses: actions/github-script@v3
