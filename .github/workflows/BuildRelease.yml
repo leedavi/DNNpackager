@@ -67,27 +67,17 @@ jobs:
         filename: 'DNNpackager_v${{ steps.branchVersion.outputs.major }}.${{ steps.branchVersion.outputs.minor }}.${{ steps.branchVersion.outputs.patch }}.zip'
         exclusions: '*.json *.pdb'
 
-
-    - name: Upload Zips
-      uses: actions/github-script@v3
+    - name: Upload Zip Release Asset
+      id: upload-release-msi 
+      uses: actions/upload-release-asset@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
       with:
-       github-token: ${{secrets.CI_TOKEN}}
-       script: |
-        const path = require('path');
-        const fs = require('fs');
-        const release_id = '${{ needs.create_release.outputs.id }}';
-          for (let file of await fs.readdirSync('./')) {
-            if (path.extname(file) === '.zip') {
-              console.log('uploadReleaseAsset', file);
-              await github.repos.uploadReleaseAsset({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                release_id: release_id,
-                name: file,
-                data: await fs.readFileSync(`./${file}`)
-              });
-            }
-          }
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./bin/netcoreapp3.1/DNNpackager_v${{ steps.branchVersion.outputs.major }}.${{ steps.branchVersion.outputs.minor }}.${{ steps.branchVersion.outputs.patch }}.zip
+          asset_name: DNNpackager_v${{ steps.branchVersion.outputs.major }}.${{ steps.branchVersion.outputs.minor }}.${{ steps.branchVersion.outputs.patch }}.zip
+          asset_content_type: application/zip
+          
 
     #- name: Upload .msi Release Asset
     #  id: upload-release-msi 
