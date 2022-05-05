@@ -1,23 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Version>1.0.8</Version>
-    <ApplicationIcon>install.ico</ApplicationIcon>
-    <AssemblyVersion>1.0.8.0</AssemblyVersion>
-    <Company>Nevoweb</Company>
-    <Authors>DCL</Authors>
-    <Configurations>Debug;Release;Razor</Configurations>
-    <FileVersion>1.0.8.0</FileVersion>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <Version>1.0.8</Version>
+        <ApplicationIcon>install.ico</ApplicationIcon>
+        <AssemblyVersion>1.0.8.0</AssemblyVersion>
+        <Company>Nevoweb</Company>
+        <Authors>DCL</Authors>
+        <Configurations>Debug;Release;Razor</Configurations>
+        <FileVersion>1.0.8.0</FileVersion>
+	    <RepositoryUrl>https://github.com/leedavi/DNNpackager</RepositoryUrl>
+	    <PackageReadmeFile>README.md</PackageReadmeFile>
+	    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>bin\</OutputPath>
-  </PropertyGroup>
+    <ItemGroup>
+		<Content Include="README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</Content>
+	</ItemGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>bin\</OutputPath>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <OutputPath>bin\</OutputPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <OutputPath>bin\</OutputPath>
+    </PropertyGroup>
 
 </Project>
