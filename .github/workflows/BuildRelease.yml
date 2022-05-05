@@ -6,7 +6,7 @@ on:
 jobs:
   build:
 
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     if: ${{ github.event.ref_type == 'branch' && startsWith(github.event.ref, 'release/') }}
 
     steps:
@@ -16,8 +16,8 @@ jobs:
       with:
         dotnet-version: 6.0.x
 
-    - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.1
+    #- name: Add msbuild to PATH
+    #  uses: microsoft/setup-msbuild@v1.1
 
     - name: Restore dependencies
       run: dotnet restore DNNpackager.csproj
@@ -29,8 +29,8 @@ jobs:
     - name: Build
       run: dotnet build DNNpackager.csproj --no-restore --configuration Release
 
-    - name: Build Install
-      run: msbuild ./DNNpackagerInstall/DNNpackagerInstall.vdproj -property:Configuration=Release -t:rebuild -verbosity:minimal
+    #- name: Build Install
+    #  run: msbuild ./DNNpackagerInstall/DNNpackagerInstall.vdproj -property:Configuration=Release -t:rebuild -verbosity:minimal
 
     - name: Pack
       run: dotnet pack DNNpackager.csproj
@@ -59,7 +59,16 @@ jobs:
     #- name: Push Nuget
     #  run: dotnet nuget push "bin/**.nupkg" --skip-duplicate --api-key ${{ secrets.CI_TOKEN }} --source "https://nuget.pkg.github.com/openstore-ecommerce/index.json"
 
-    - name: Upload Source Zip
+    - name: Create Zip Archive 
+      uses: thedoctor0/zip-release@master
+      with:
+        type: 'zip'
+        path: ./bin/netcoreapp3.1
+        filename: 'DNNpackager_v${{ steps.branchVersion.outputs.major }}.${{ steps.branchVersion.outputs.minor }}.${{ steps.branchVersion.outputs.patch }}.zip'
+        exclusions: '*.json *.pdb'
+
+
+    - name: Upload Zips
       uses: actions/github-script@v3
       with:
        github-token: ${{secrets.CI_TOKEN}}
@@ -80,24 +89,24 @@ jobs:
             }
           }
 
-    - name: Upload .msi Release Asset
-      id: upload-release-msi 
-      uses: actions/upload-release-asset@v1
-      env:
-          GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
-      with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./DNNpackagerInstall/Release/DNNpackagerInstall.msi
-          asset_name: DNNpackagerInstall.msi
-          asset_content_type: application/x-msi
+    #- name: Upload .msi Release Asset
+    #  id: upload-release-msi 
+    #  uses: actions/upload-release-asset@v1
+    #  env:
+    #      GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
+    #  with:
+    #      upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+    #      asset_path: ./DNNpackagerInstall/Release/DNNpackagerInstall.msi
+    #      asset_name: DNNpackagerInstall.msi
+    #      asset_content_type: application/x-msi
 
-    - name: Upload .exe Release Asset
-      id: upload-release-exe 
-      uses: actions/upload-release-asset@v1
-      env:
-          GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
-      with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./DNNpackagerInstall/Release/setup.exe
-          asset_name: setup.exe
-          asset_content_type: application/octet-stream
+    #- name: Upload .exe Release Asset
+    #  id: upload-release-exe 
+    #  uses: actions/upload-release-asset@v1
+    #  env:
+    #      GITHUB_TOKEN: ${{ secrets.CI_TOKEN }}
+    #  with:
+    #      upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+    #      asset_path: ./DNNpackagerInstall/Release/setup.exe
+    #      asset_name: setup.exe
+    #      asset_content_type: application/octet-stream
