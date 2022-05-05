@@ -20,8 +20,4 @@
     <OutputPath>bin\</OutputPath>
   </PropertyGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="if &quot;$(ConfigurationName)&quot;==Debug (&#xD;&#xA;copy $(OutDir)$(TargetFileName) &quot;C:\Program Files (x86)\Nevoweb\DNNpackager\$(TargetFileName)&quot;&#xD;&#xA;copy $(OutDir)DNNpackager.exe &quot;C:\Program Files (x86)\Nevoweb\DNNpackager\DNNpackager.exe&quot;&#xD;&#xA;)" />
-  </Target>
-
 </Project>
