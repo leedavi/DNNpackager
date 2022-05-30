@@ -267,8 +267,8 @@ namespace DNNpackager
                         var fileGitDate = File.GetLastWriteTime(Path.Combine(gitDir.FullName, fi.Name));
                         if (fileGitDate < fileWebDate)
                         {
-                            Console.WriteLine("Pull: " + Path.Combine(gitDir.FullName, fi.Name));
-                            fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
+                            Console.WriteLine("DO NOT Pull: " + Path.Combine(gitDir.FullName, fi.Name));
+                            //fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
                         }
                     }
                     else
