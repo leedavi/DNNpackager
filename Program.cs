@@ -291,11 +291,11 @@ namespace DNNpackager
                     {
                         var fileGitDate = fi.LastWriteTime;
                         var fileWebDate = File.GetLastWriteTime(Path.Combine(webDir.FullName, fi.Name));
-                        if (fileGitDate > fileWebDate)
-                        {
+                        //if (fileGitDate > fileWebDate)
+                        //{
                             Console.WriteLine("CopyTo: " + Path.Combine(webDir.FullName, fi.Name));
                             fi.CopyTo(Path.Combine(webDir.FullName, fi.Name), true);
-                        }
+                        //}
                     }
                     else
                     {
