@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Markdig;
+using Markdig.Parsers;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -6,6 +8,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace DNNpackager
 {
@@ -42,7 +45,7 @@ namespace DNNpackager
                 Console.WriteLine("##################### START DNNpackager ##################### ");
 
                 // Sleep if we need to debug, so we can attach debugger
-                //Thread.Sleep(10000);
+                Thread.Sleep(10000);
 
                 _repofilesdelete = false; // Delete files in the website that don't exist in the repo;
                 if (args.Length >= 1)
@@ -228,6 +231,22 @@ namespace DNNpackager
                         Console.WriteLine("***** SYNC FILES ONLY *******");
                     }
                 }
+                Console.WriteLine("##################### CONVERT MARKDOWN README.MD #####################  ");
+                var mdFileMapPath = _sourceRootPath.TrimEnd('\\') + "\\ReadMe.md";
+                var htmlFileMapPath = _sourceRootPath.TrimEnd('\\') + "\\ReadMe.html"; ;
+                if (File.Exists(mdFileMapPath))
+                {
+                    try
+                    {
+                        var markDown = FileUtils.ReadFile(mdFileMapPath);
+                        string htmltext = MarkDownParser.Parse(markDown);
+                        FileUtils.SaveFile(htmlFileMapPath, htmltext);
+                    }
+                    catch (Exception ex)
+                    {
+                        FileUtils.SaveFile(htmlFileMapPath, "INVALID MarkDown: " + mdFileMapPath + Environment.NewLine + " " + ex.ToString());
+                    }
+                }
                 Console.WriteLine("##################### WEBSITE FOLDER #####################  ");
                 Console.WriteLine(_websiteFolder);
                 Console.WriteLine("##################### END DNNpackager #####################  " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
@@ -240,6 +259,21 @@ namespace DNNpackager
                 //Console.WriteLine("Press any key.");
                 //Console.ReadKey();
             }
+        }
+        public static class MarkDownParser
+        {
+            public static string Parse(string markdown)
+            {
+                if (string.IsNullOrEmpty(markdown))
+                    return "";
+
+                var pipeline = new MarkdownPipelineBuilder()
+                    .UseAdvancedExtensions()
+                    .Build();
+
+                return Markdown.ToHtml(markdown, pipeline);
+            }
+
         }
         static void SyncAll(DirectoryInfo gitDir, DirectoryInfo webDir)
         {
