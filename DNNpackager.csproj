@@ -25,7 +25,15 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="Markdig.Signed" Version="0.30.3" />
+    <PackageReference Include="Markdig" Version="0.30.3">
+      <IncludeAssets></IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Markdig">
+      <HintPath>C:\Program Files (x86)\Nevoweb\DNNpackager\Markdig.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
