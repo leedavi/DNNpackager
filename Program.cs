@@ -45,7 +45,7 @@ namespace DNNpackager
                 Console.WriteLine("##################### START DNNpackager ##################### ");
 
                 // Sleep if we need to debug, so we can attach debugger
-                Thread.Sleep(3000);
+                ///Thread.Sleep(3000);
 
                 _repofilesdelete = false; // Delete files in the website that don't exist in the repo;
                 if (args.Length >= 1)
@@ -107,36 +107,9 @@ namespace DNNpackager
                         SetupConfig(configPath);
 
                         Console.WriteLine("##################### CONVERT MARKDOWN #####################  ");
-                        var docsMenu = DocsBuildMenu(_mdFolder);
-                        var templateBaseMapPath = _mdFolder + "\\template.html";
-                        var templateBase = FileUtils.ReadFile(templateBaseMapPath);
-                        var docsList = new List<string>();
-                        var docsArray = Directory.GetFiles(_mdFolder, "*.md");
-                        var mdFileMapPath = _sourceRootPath.TrimEnd('\\') + "\\ReadMe.md";
-                        var htmlFileMapPath = _sourceRootPath.TrimEnd('\\') + "\\ReadMe.html"; ;
-                        foreach (var f in docsArray)
-                        {
-                            docsList.Add(f);
-                        }
-                        docsList.Add(mdFileMapPath);
-                        foreach (var f in docsList)
-                        {
-                            if (File.Exists(f))
-                            {
-                                try
-                                {
-                                    var markDown = FileUtils.ReadFile(f);
-                                    var subMenu = DocsBuildSubMenu(markDown);
-                                    string htmltext = MarkDownParse(markDown);
-                                    var outputHtml = templateBase.Replace("[MENU]", docsMenu).Replace("[BODY]", htmltext).Replace("[SUBMENU]", subMenu);
-                                    FileUtils.SaveFile(htmlFileMapPath, outputHtml);
-                                }
-                                catch (Exception ex)
-                                {
-                                    FileUtils.SaveFile(htmlFileMapPath, "INVALID MarkDown: " + mdFileMapPath + Environment.NewLine + " " + ex.ToString());
-                                }
-                            }
-                        }
+                        // Build MarkDown Docs
+                        var markDownData = new MarkDownLimpet(_sourceRootPath);
+                        markDownData.SaveDocs(_websiteDestFolder);
 
                         // do recursive copy files
                         Console.WriteLine("--- Folder Search ---");
@@ -276,16 +249,6 @@ namespace DNNpackager
                 //Console.ReadKey();
             }
         }
-        static string MarkDownParse(string markdown)
-        {
-            if (string.IsNullOrEmpty(markdown))
-                return "";
-
-            var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
-
-            return Markdown.ToHtml(markdown, pipeline);
-        }
-
         static void SyncAll(DirectoryInfo gitDir, DirectoryInfo webDir)
         {
             Directory.CreateDirectory(webDir.FullName);
@@ -617,20 +580,5 @@ namespace DNNpackager
             string result = Source.Remove(place, Find.Length).Insert(place, Replace);
             return result;
         }
-        public static string DocsBuildMenu(string docsFolder)
-        {
-            if (!Directory.Exists(_mdFolder)) return "";
-            var rtn = "";
-            foreach (var f in Directory.GetFiles(docsFolder, "*.md"))
-            {
-                rtn += "<div>" + Path.GetFileNameWithoutExtension(f).Replace("_", "&nbsp;") + "</div>";
-            }
-            return rtn;
-        }
-        public static string DocsBuildSubMenu(string markDownText)
-        {
-            return "Sub-Menu";
-        }
-
     }
 }
