@@ -69,6 +69,11 @@ arg3 - **\<ConfigurationName\>** = The VS configuration. \$(ConfigurationName) (
 DNNpackager.exe $(ProjectDir) $(ProjectDir)$(OutDir) $(ConfigurationName) /clean
 ```
 
+**"/debug"** option will pause the execution for 6 seconds, so the VS debugger can be attached.
+```
+DNNpackager.exe $(ProjectDir) $(TargetDir) $(ConfigurationName) /debug
+```
+
 Example from VS post build event:
 ```
 

@@ -41,7 +41,7 @@ namespace DNNpackager
                         var s = line.Split(':');
                         if (s.Length == 3)
                         {
-                            rtn.Add(s[1].TrimEnd(']'), s[2]);
+                            rtn.Add(s[1].TrimEnd(']'), s[2].Trim());
                         }
                     }
                 }
@@ -73,7 +73,9 @@ namespace DNNpackager
         }
         public void SaveHtml(string docsDestFolder)
         {
-            FileUtils.SaveFile(docsDestFolder.TrimEnd('\\') + "\\" + DocsFolder + "\\" + Path.GetFileNameWithoutExtension(FileMapPath) + ".html", HtmlText);
+            var folder = docsDestFolder.TrimEnd('\\') + "\\" + DocsFolder;
+            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+            FileUtils.SaveFile(folder + "\\" + Path.GetFileNameWithoutExtension(FileMapPath) + ".html", HtmlText);
         }
 
         public bool Exists { set; get; }
@@ -81,9 +83,10 @@ namespace DNNpackager
         public string HtmlText { set; get; }
         public string TemplateFolder { get { return MetaData["templatefolder"]; } }
         public string DocsFolder { get { return MetaData["docsfolder"]; } }
+        public string Url { get { return "/RocketDocs/" + MetaData["docsfolder"].ToLower().Replace("\\","/") + "/" + Path.GetFileNameWithoutExtension(FileMapPath) + ".html"; } }
         public string SortOrder { get { return MetaData["sortorder"]; } }
         public string Name { get { return MetaData["name"]; } }
-        public string MenuGroup { get { return MetaData["menugroup"]; } }        
+        public string MenuGroup { get { return MetaData["menugroup"]; } }  
         public Dictionary<string, string> MetaData { set; get; }
 
     }

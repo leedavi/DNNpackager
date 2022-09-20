@@ -34,7 +34,8 @@ namespace DNNpackager
         private static string _mdFolder;
         
         private static bool _nocompile;
-
+        private static bool _debugMode;
+        
         // options (args > 3)
         private static bool _repofilesdelete;
 
@@ -44,9 +45,6 @@ namespace DNNpackager
             {
                 Console.WriteLine("##################### START DNNpackager ##################### ");
 
-                // Sleep if we need to debug, so we can attach debugger
-                ///Thread.Sleep(3000);
-
                 _repofilesdelete = false; // Delete files in the website that don't exist in the repo;
                 if (args.Length >= 1)
                 {
@@ -55,6 +53,7 @@ namespace DNNpackager
                     _websiteBinFolder = "";
                     _websiteDestFolder = "";
                     _nocompile = false;
+                    _debugMode = false;
 
                     var binSource = "";
                     var configurationName = "release";
@@ -62,17 +61,20 @@ namespace DNNpackager
                     {
                         configurationName = args[1].ToLower();
                     }
-                    if (args.Length == 3)
+                    if (args.Length >= 3)
                     {
                         binSource = args[1];
                         configurationName = args[2].ToLower();
                     }
-
+                    if (args.Contains("/debug")) _debugMode = true;
                     if (args.Contains("/clean")) _repofilesdelete = true;
+
+                    // Sleep if we need to debug, so we can attach debugger
+                    if (_debugMode) Thread.Sleep(6000);
 
                     if (configurationName == "razor" || configurationName.StartsWith("nc-")) _nocompile = true;
 
-                        var configPath = args[0];
+                    var configPath = args[0];
                     if (Path.GetFileName(configPath) == "")
                     {
                         // Search for dnnpack file.
@@ -106,19 +108,26 @@ namespace DNNpackager
                         //setup config
                         SetupConfig(configPath);
 
-                        Console.WriteLine("##################### CONVERT MARKDOWN #####################  ");
+                        Console.WriteLine("##################### MARKDOWN DOCS #####################  ");
                         // Build MarkDown Docs
                         var markDownData = new MarkDownLimpet(_sourceRootPath);
-                        markDownData.SaveDocs(_websiteDestFolder);
+                        foreach (var g in markDownData.GetGroups())
+                        {
+                            foreach (var d in markDownData.GetGroupDocs(g))
+                            {
+                                markDownData.SaveDoc(d, _websiteFolder);
+                            }
+                        }
 
                         // do recursive copy files
                         Console.WriteLine("--- Folder Search ---");
                         DirCopy(_sourceRootPath); // copy root without recursive
                         DirSearch(_sourceRootPath, 0);
 
-                        // Copy files to working website direcotry
                         if (_websiteDestFolder != "")
                         {
+                            Console.WriteLine("##################### COPY FILES #####################  ");
+                            // Copy files to working website direcotry
                             var diSource = new DirectoryInfo(_resourcesPath);
                             var diTarget = new DirectoryInfo(_websiteDestFolder);
                             if (_websiteDestFolder != "") // we may only want to build install zip.
