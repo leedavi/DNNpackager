@@ -35,7 +35,8 @@ namespace DNNpackager
         
         private static bool _nocompile;
         private static bool _debugMode;
-        
+        private static bool _docsMode;
+
         // options (args > 3)
         private static bool _repofilesdelete;
 
@@ -54,6 +55,7 @@ namespace DNNpackager
                     _websiteDestFolder = "";
                     _nocompile = false;
                     _debugMode = false;
+                    _docsMode = false;
 
                     var binSource = "";
                     var configurationName = "release";
@@ -68,7 +70,8 @@ namespace DNNpackager
                     }
                     if (args.Contains("/debug")) _debugMode = true;
                     if (args.Contains("/clean")) _repofilesdelete = true;
-
+                    if (args.Contains("/docs")) _docsMode = true;
+                    
                     // Sleep if we need to debug, so we can attach debugger
                     if (_debugMode) Thread.Sleep(6000);
 
@@ -108,11 +111,17 @@ namespace DNNpackager
                         //setup config
                         SetupConfig(configPath);
 
-                        Console.WriteLine("##################### MARKDOWN DOCS #####################  ");
-                        // Build MarkDown Docs
-                        var markDownData = new MarkDownLimpet(_sourceRootPath);
-                        markDownData.SaveDocs(_websiteFolder);
-
+                        if (_docsMode)
+                        {
+                            Console.WriteLine("##################### MARKDOWN DOCS #####################  ");
+                            // Build MarkDown Docs
+                            var markDownData = new MarkDownLimpet(_sourceRootPath);
+                            markDownData.SaveDocs(_websiteFolder);
+                        }
+                        else
+                        {
+                            Console.WriteLine("MARKDOWN documentation skipped.  use '/docs' option on cmd to process documentation. ");
+                        }
                         // do recursive copy files
                         Console.WriteLine("--- Folder Search ---");
                         DirCopy(_sourceRootPath); // copy root without recursive

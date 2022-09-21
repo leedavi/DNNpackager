@@ -11,8 +11,12 @@ namespace DNNpackager
 {
     public class MarkDownLimpet
     {
+        private string _projectFolder;
+        private string _imgFolder;
         public MarkDownLimpet(string projectFolder)
         {
+            _projectFolder = projectFolder;
+            _imgFolder = projectFolder.TrimEnd('\\') + "\\docs\\img";
             var templateBaseMapPath = projectFolder.TrimEnd('\\') + "\\docs\\templates\\template.html";
             var templateBase = FileUtils.ReadFile(templateBaseMapPath);
 
@@ -46,20 +50,16 @@ namespace DNNpackager
         }
         public void SaveDocs(string websiteDestFolder)
         {
-            var docsDestFolder = websiteDestFolder + "\\RocketDocs";
-            if (!Directory.Exists(docsDestFolder)) Directory.CreateDirectory(docsDestFolder);
             var menuHtml = DocsBuildMenu();
             foreach (var d in DocsFiles)
             {
                 d.HtmlText = d.HtmlText.Replace("[MENU]", menuHtml);
-                d.SaveHtml(docsDestFolder);
+                d.SaveHtml(websiteDestFolder);
             }
         }
         public void SaveDoc(DocsDataFile doc, string websiteDestFolder)
         {
-            var docsDestFolder = websiteDestFolder + "\\RocketDocs";
-            if (!Directory.Exists(docsDestFolder)) Directory.CreateDirectory(docsDestFolder);
-            doc.SaveHtml(docsDestFolder);
+            doc.SaveHtml(websiteDestFolder);
         }
         public List<string> GetGroups()
         {
@@ -88,10 +88,12 @@ namespace DNNpackager
         }
         public string DocsBuildMenu()
         {
+            var templateBaseMapPath = _projectFolder.TrimEnd('\\') + "\\docs\\templates\\menuline.html";
+            var templateBase = FileUtils.ReadFile(templateBaseMapPath);
             var rtn = "";
             foreach (var f in GetDocs())
             {
-                rtn += "<a href=\"" + f.Url + "\" class=\"w3-bar-item w3-button w3-hover-white\">" + Path.GetFileNameWithoutExtension(f.Name).Replace("_", "&nbsp;") + "</a>";
+                rtn += templateBase.Replace("[URL]",f.Url).Replace("[NAME]", f.Name.Replace("_","&nbsp;"));
             }
             return rtn;
         }

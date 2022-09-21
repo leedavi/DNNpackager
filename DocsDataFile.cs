@@ -8,10 +8,12 @@ namespace DNNpackager
 {
     public class DocsDataFile
     {
+        private string _sourceFolder;
         public DocsDataFile(string mdFileMapPath, string templateBase)
         {
             Exists = false;
             FileMapPath = mdFileMapPath;
+            _sourceFolder = Path.GetDirectoryName(mdFileMapPath);
             if (File.Exists(FileMapPath)) Exists = true;
             MetaData = GetMeta();
             if (MetaData.Count > 0)
@@ -46,6 +48,26 @@ namespace DNNpackager
             }
             return rtn;
         }
+        private List<string> GetImgs()
+        {
+            string line = "";
+            var rtn = new List<string>();
+            using (var reader = new System.IO.StreamReader(FileMapPath))
+            {
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (line.Trim().StartsWith("![File]"))
+                    {
+                        var s = line.Split('(');
+                        if (s.Length == 2)
+                        {
+                            rtn.Add(s[1].TrimEnd(')').Trim());
+                        }
+                    }
+                }
+            }
+            return rtn;
+        }        
         private string MarkDownParse(string markdown)
         {
             if (string.IsNullOrEmpty(markdown))
@@ -59,7 +81,15 @@ namespace DNNpackager
         {
             var folder = docsDestFolder.TrimEnd('\\') + "\\" + DocsFolder;
             if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
-            FileUtils.SaveFile(folder + "\\" + Path.GetFileNameWithoutExtension(FileMapPath) + ".html", HtmlText);
+            FileUtils.SaveFile(folder + "\\" + Name.ToLower() + ".html", HtmlText);
+
+            // Copy img folder
+            if (!Directory.Exists(folder + "\\img")) Directory.CreateDirectory(folder + "\\img");
+            var imgList = GetImgs();
+            foreach (var i in imgList)
+            {
+                File.Copy(_sourceFolder.TrimEnd('\\') + "\\" + i.TrimStart('\\'), folder.TrimEnd('\\') + "\\" + i.TrimStart('\\'), true);
+            }
         }
         public string DocsBuildSubMenu(string markDownText)
         {
@@ -71,7 +101,8 @@ namespace DNNpackager
         public string HtmlText { set; get; }
         public string TemplateFolder { get { if (MetaData.ContainsKey("templatefolder")) return MetaData["templatefolder"]; else return ""; } }
         public string DocsFolder { get { if (MetaData.ContainsKey("docsfolder")) return MetaData["docsfolder"]; else return ""; } }
-        public string Url { get { return "/RocketDocs/" + MetaData["docsfolder"].ToLower().Replace("\\","/") + "/" + Path.GetFileNameWithoutExtension(FileMapPath) + ".html"; } }
+        public string ImgFolder { get { return DocsFolder + "\\img"; } }
+        public string Url { get { return "/" + MetaData["docsfolder"].ToLower().Replace("\\","/") + "/" + Name.ToLower() + ".html"; } }
         public string SortOrder { get { if (MetaData.ContainsKey("sortorder")) return MetaData["sortorder"]; else return ""; } }
         public string Name { get { if (MetaData.ContainsKey("name")) return MetaData["name"]; else return ""; } }
         public string MenuGroup { get { if (MetaData.ContainsKey("menugroup")) return MetaData["menugroup"]; else return ""; } }  
