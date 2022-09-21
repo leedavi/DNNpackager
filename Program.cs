@@ -111,13 +111,7 @@ namespace DNNpackager
                         Console.WriteLine("##################### MARKDOWN DOCS #####################  ");
                         // Build MarkDown Docs
                         var markDownData = new MarkDownLimpet(_sourceRootPath);
-                        foreach (var g in markDownData.GetGroups())
-                        {
-                            foreach (var d in markDownData.GetGroupDocs(g))
-                            {
-                                markDownData.SaveDoc(d, _websiteFolder);
-                            }
-                        }
+                        markDownData.SaveDocs(_websiteFolder);
 
                         // do recursive copy files
                         Console.WriteLine("--- Folder Search ---");

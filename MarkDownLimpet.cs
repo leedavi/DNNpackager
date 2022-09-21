@@ -11,14 +11,8 @@ namespace DNNpackager
 {
     public class MarkDownLimpet
     {
-        private string _projectFolder;
-        private Dictionary<string,string> _mdMeta;
-        private Dictionary<string, DocsDataFile> _htmlFiles;
-
         public MarkDownLimpet(string projectFolder)
         {
-            _projectFolder = projectFolder;
-
             var templateBaseMapPath = projectFolder.TrimEnd('\\') + "\\docs\\templates\\template.html";
             var templateBase = FileUtils.ReadFile(templateBaseMapPath);
 
@@ -31,6 +25,7 @@ namespace DNNpackager
                 docsList.Add(f);
             }
             docsList.Add(mdFileMapPath);
+
             foreach (var f in docsList)
             {
                 if (File.Exists(f))
@@ -53,8 +48,10 @@ namespace DNNpackager
         {
             var docsDestFolder = websiteDestFolder + "\\RocketDocs";
             if (!Directory.Exists(docsDestFolder)) Directory.CreateDirectory(docsDestFolder);
+            var menuHtml = DocsBuildMenu();
             foreach (var d in DocsFiles)
             {
+                d.HtmlText = d.HtmlText.Replace("[MENU]", menuHtml);
                 d.SaveHtml(docsDestFolder);
             }
         }
@@ -73,12 +70,29 @@ namespace DNNpackager
             }
             return rtn;
         }
+        public List<DocsDataFile> GetDocs()
+        {
+            var rtn = new List<DocsDataFile>();
+            var items = DocsFiles.OrderBy(x => x.SortOrder);
+            foreach (var item in items)
+                rtn.Add(item);
+            return rtn;
+        }
         public List<DocsDataFile> GetGroupDocs(string groupName)
         {
             var rtn = new List<DocsDataFile>();
             var items = DocsFiles.Where(x => x.MenuGroup == groupName).OrderBy(x => x.SortOrder); 
             foreach (var item in items)
                 rtn.Add(item);
+            return rtn;
+        }
+        public string DocsBuildMenu()
+        {
+            var rtn = "";
+            foreach (var f in GetDocs())
+            {
+                rtn += "<a href=\"" + f.Url + "\" class=\"w3-bar-item w3-button w3-hover-white\">" + Path.GetFileNameWithoutExtension(f.Name).Replace("_", "&nbsp;") + "</a>";
+            }
             return rtn;
         }
         public List<DocsDataFile> DocsFiles { set; get; }

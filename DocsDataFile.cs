@@ -17,10 +17,8 @@ namespace DNNpackager
             if (MetaData.Count > 0)
             {
                 var markDown = FileUtils.ReadFile(FileMapPath);
-                var subMenu = DocsBuildSubMenu(markDown);
-                var docsMenu = DocsBuildMenu(markDown);
                 string htmltext = MarkDownParse(markDown);
-                HtmlText = templateBase.Replace("[MENU]", docsMenu).Replace("[BODY]", htmltext).Replace("[SUBMENU]", subMenu);
+                HtmlText = templateBase.Replace("[BODY]", htmltext).Replace("[SUBMENU]", DocsBuildSubMenu(markDown));
             }
             else
             {
@@ -41,7 +39,7 @@ namespace DNNpackager
                         var s = line.Split(':');
                         if (s.Length == 3)
                         {
-                            rtn.Add(s[1].TrimEnd(']'), s[2].Trim());
+                            rtn.Add(s[1].TrimEnd(']'), s[2].TrimStart('-').Trim());
                         }
                     }
                 }
@@ -57,36 +55,26 @@ namespace DNNpackager
 
             return Markdown.ToHtml(markdown, pipeline);
         }
-        public string DocsBuildMenu(string docsFolder)
-        {
-            if (!Directory.Exists(docsFolder)) return "";
-            var rtn = "";
-            foreach (var f in Directory.GetFiles(docsFolder, "*.md"))
-            {
-                rtn += "<a href=\"#\" class=\"w3-bar-item w3-button w3-hover-white\">" + Path.GetFileNameWithoutExtension(f).Replace("_", "&nbsp;") + "</a>";
-            }
-            return rtn;
-        }
-        public string DocsBuildSubMenu(string markDownText)
-        {
-            return "Sub-Menu";
-        }
         public void SaveHtml(string docsDestFolder)
         {
             var folder = docsDestFolder.TrimEnd('\\') + "\\" + DocsFolder;
             if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
             FileUtils.SaveFile(folder + "\\" + Path.GetFileNameWithoutExtension(FileMapPath) + ".html", HtmlText);
         }
+        public string DocsBuildSubMenu(string markDownText)
+        {
+            return "Sub-Menu";
+        }
 
         public bool Exists { set; get; }
         public string FileMapPath { set; get; }
         public string HtmlText { set; get; }
-        public string TemplateFolder { get { return MetaData["templatefolder"]; } }
-        public string DocsFolder { get { return MetaData["docsfolder"]; } }
+        public string TemplateFolder { get { if (MetaData.ContainsKey("templatefolder")) return MetaData["templatefolder"]; else return ""; } }
+        public string DocsFolder { get { if (MetaData.ContainsKey("docsfolder")) return MetaData["docsfolder"]; else return ""; } }
         public string Url { get { return "/RocketDocs/" + MetaData["docsfolder"].ToLower().Replace("\\","/") + "/" + Path.GetFileNameWithoutExtension(FileMapPath) + ".html"; } }
-        public string SortOrder { get { return MetaData["sortorder"]; } }
-        public string Name { get { return MetaData["name"]; } }
-        public string MenuGroup { get { return MetaData["menugroup"]; } }  
+        public string SortOrder { get { if (MetaData.ContainsKey("sortorder")) return MetaData["sortorder"]; else return ""; } }
+        public string Name { get { if (MetaData.ContainsKey("name")) return MetaData["name"]; else return ""; } }
+        public string MenuGroup { get { if (MetaData.ContainsKey("menugroup")) return MetaData["menugroup"]; else return ""; } }  
         public Dictionary<string, string> MetaData { set; get; }
 
     }
