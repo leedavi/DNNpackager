@@ -159,7 +159,6 @@ If the markdown does NOT have any meta data, the file will be ignored.
 The markdown meta data in a simple set of text that will be hidden.
 
 ```
-[_metadata_:templatefolder]: rocketerms
 [_metadata_:docsfolder]: docs\erms\advert
 [_metadata_:menugroup]: Advert
 [_metadata_:name]: Introduction

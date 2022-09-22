@@ -56,12 +56,12 @@ namespace DNNpackager
             {
                 while ((line = reader.ReadLine()) != null)
                 {
-                    if (line.Trim().StartsWith("![File]"))
+                    if (line.Trim().StartsWith("!["))
                     {
                         var s = line.Split('(');
                         if (s.Length == 2)
                         {
-                            rtn.Add(s[1].TrimEnd(')').Trim());
+                            if (s[1].TrimEnd().StartsWith("img/")) rtn.Add(s[1].TrimEnd(')').Trim());
                         }
                     }
                 }
@@ -99,7 +99,6 @@ namespace DNNpackager
         public bool Exists { set; get; }
         public string FileMapPath { set; get; }
         public string HtmlText { set; get; }
-        public string TemplateFolder { get { if (MetaData.ContainsKey("templatefolder")) return MetaData["templatefolder"]; else return ""; } }
         public string DocsFolder { get { if (MetaData.ContainsKey("docsfolder")) return MetaData["docsfolder"]; else return ""; } }
         public string ImgFolder { get { return DocsFolder + "\\img"; } }
         public string Url { get { return "/" + MetaData["docsfolder"].ToLower().Replace("\\","/") + "/" + Name.ToLower() + ".html"; } }
