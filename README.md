@@ -46,6 +46,7 @@ Use the Installation Package to install on the local machine or clone the reposi
 
 Running From VS
 -----------------
+**NOTE: Close all website AppPools before running to unlocked files**
 
 The operation is most easily ran from the "Post Build Event".  This automates the transfer of files from the working folders to the website folders.
 
