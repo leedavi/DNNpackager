@@ -1,6 +1,7 @@
 ﻿using Markdig;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -45,6 +46,7 @@ namespace DNNpackager
             try
             {
                 Console.WriteLine("##################### START DNNpackager ##################### ");
+                Console.WriteLine("NOTE: Shutdown website AppPool to prevent locked files.");
 
                 _repofilesdelete = false; // Delete files in the website that don't exist in the repo;
                 if (args.Length >= 1)
@@ -177,6 +179,7 @@ namespace DNNpackager
                             Directory.Delete(_resourcesPath, true);
                             if (!Directory.Exists(_sourceRootPath + "\\Installation\\")) Directory.CreateDirectory(_sourceRootPath + "\\Installation\\"); // Create installation folder (It should already exist)
 
+                            var assemblyVersionRecord = "";
                             foreach (var assemblyPath in _assemblyList)
                             {
                                 if (assemblyPath != "")
@@ -197,11 +200,25 @@ namespace DNNpackager
                                                     File.Copy(fullPath, _websiteBinFolder.TrimEnd('\\') + "\\" + assemblyName, true);
                                                 }
                                             }
-                                        }
 
+                                            var versionInfo = FileVersionInfo.GetVersionInfo(fullPath);
+                                            string version = versionInfo.FileVersion;
+                                            Console.WriteLine("Assembly: " + fullPath);
+                                            Console.WriteLine("Version: " + version);
+                                            assemblyVersionRecord += assemblyName + " : " + version + Environment.NewLine;
+                                        }
                                     }
                                 }
                             }
+
+                            // output verison xml file
+                            if (configurationName.ToLower() == "release" && dnnFileExists)
+                            {
+                                if (_name == "") _name = dirName;
+                                var versionMapPath = _sourceRootPath + "\\Installation\\" + _name + "_" + _version + "_Versions.xml";
+                                FileUtils.SaveFile(versionMapPath, assemblyVersionRecord);
+                            }
+
 
                             // Include specified file at root of install zip.
                             foreach (var fileIncludePath in _includeFileList)
@@ -256,6 +273,7 @@ namespace DNNpackager
             catch (Exception ex)
             {
                 Console.WriteLine("ERROR: " + ex.ToString());
+                Console.WriteLine("ERROR: ********** Shutdown website AppPool to prevent locked files. **********");
                 Thread.Sleep(10000);
                 //Console.WriteLine("Press any key.");
                 //Console.ReadKey();
@@ -323,8 +341,9 @@ namespace DNNpackager
                         fi.CopyTo(Path.Combine(webDir.FullName, fi.Name), true);
                     }
                 }
+
             }
-            // remove any files in webiste that do not exists in the Git Repo
+            // remove any files in website that do not exists in the Git Repo
             // This process is a problem for plugins, where files may have been added to the project at runtime.
             // We therefore only delete files when the "/clean" options has been added to the command args[].
             if (_repofilesdelete)
