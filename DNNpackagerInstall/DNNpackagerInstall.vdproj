@@ -87,6 +87,14 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+            }
         }
         "Release"
         {
@@ -206,15 +214,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:DNNpackager"
-        "ProductCode" = "8:{D17A89FD-F767-400D-AC16-796043F363F7}"
-        "PackageCode" = "8:{DE686088-C2CC-4AAC-85E4-995E9E07A601}"
+        "ProductCode" = "8:{FADEE913-2DF0-4C7E-9588-F8E7BF2512B5}"
+        "PackageCode" = "8:{97A725D7-CEE8-4379-8319-F9EEFC8BC261}"
         "UpgradeCode" = "8:{6DDD1446-344E-4FEC-BF54-EFC4E6EE5333}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
-        "RemovePreviousVersions" = "11:FALSE"
+        "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:1.0.0"
+        "ProductVersion" = "8:1.0.1"
         "Manufacturer" = "8:Nevoweb"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -812,7 +820,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_12A845227880437CA6B74D2A4C3177F9"
             {
-            "SourcePath" = "8:..\\obj\\Razor\\netcoreapp3.1\\DNNpackager.dll"
+            "SourcePath" = "8:..\\obj\\Debug\\net6.0\\DNNpackager.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_A59FC34946E74238A56C902D894B1996"
@@ -1092,7 +1100,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_8E45DCB31F5143C6AD72DB5B925F1960"
             {
-            "SourcePath" = "8:..\\obj\\Razor\\netcoreapp3.1\\DNNpackager.dll"
+            "SourcePath" = "8:..\\obj\\Debug\\net6.0\\DNNpackager.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_A59FC34946E74238A56C902D894B1996"
@@ -1120,7 +1128,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_A19C4D154C8C49738D31714D40B759F2"
             {
-            "SourcePath" = "8:..\\obj\\Razor\\netcoreapp3.1\\DNNpackager.exe"
+            "SourcePath" = "8:..\\obj\\Debug\\net6.0\\apphost.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_A59FC34946E74238A56C902D894B1996"
@@ -1232,7 +1240,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_B29049B4008549D6BDD5617FF3200A36"
             {
-            "SourcePath" = "8:..\\obj\\Razor\\netcoreapp3.1\\DNNpackager.exe"
+            "SourcePath" = "8:..\\obj\\Debug\\net6.0\\apphost.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_A59FC34946E74238A56C902D894B1996"
