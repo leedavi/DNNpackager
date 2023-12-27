@@ -216,7 +216,7 @@ namespace DNNpackager
                             {
                                 if (_name == "") _name = dirName;
                                 var versionMapPath = _sourceRootPath + "\\Installation\\" + _name + "_" + _version + "_Versions.xml";
-                                FileUtils.SaveFile(versionMapPath, assemblyVersionRecord);
+                                //FileUtils.SaveFile(versionMapPath, assemblyVersionRecord);
                             }
 
 
