@@ -120,10 +120,7 @@ namespace DNNpackager
                             var markDownData = new MarkDownLimpet(_sourceRootPath);
                             markDownData.SaveDocs(_websiteFolder);
                         }
-                        else
-                        {
-                            Console.WriteLine("MARKDOWN documentation skipped.  use '/docs' option on cmd to process documentation. ");
-                        }
+
                         // do recursive copy files
                         Console.WriteLine("--- Folder Search ---");
                         DirCopy(_sourceRootPath); // copy root without recursive
@@ -291,31 +288,31 @@ namespace DNNpackager
             foreach (FileInfo fi in webDir.GetFiles()) { webList.Add(fi); webListNames.Add(Path.GetFileName(fi.Name)); }
 
             // copy any newer files from website to git repo
-            foreach (var fi in webList)
-            {
-                if (Path.GetExtension(fi.Name) == "")
-                {
-                    Console.WriteLine("WARNING: No file extension.  (Not Processed)  " + fi.FullName);
-                }
-                else
-                {
-                    if (File.Exists(Path.Combine(gitDir.FullName, fi.Name)))
-                    {
-                        var fileWebDate = fi.LastWriteTime;
-                        var fileGitDate = File.GetLastWriteTime(Path.Combine(gitDir.FullName, fi.Name));
-                        if (fileGitDate < fileWebDate)
-                        {
-                            Console.WriteLine("DO NOT Pull: " + Path.Combine(gitDir.FullName, fi.Name));
-                            //fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
-                        }
-                    }
-                    else
-                    {
-                        //Console.WriteLine("Pull: " + fi.Name);
-                        //fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
-                    }
-                }
-            }
+            //foreach (var fi in webList)
+            //{
+            //    if (Path.GetExtension(fi.Name) == "")
+            //    {
+            //        Console.WriteLine("WARNING: No file extension.  (Not Processed)  " + fi.FullName);
+            //    }
+            //    else
+            //    {
+            //        if (File.Exists(Path.Combine(gitDir.FullName, fi.Name)))
+            //        {
+            //            var fileWebDate = fi.LastWriteTime;
+            //            var fileGitDate = File.GetLastWriteTime(Path.Combine(gitDir.FullName, fi.Name));
+            //            if (fileGitDate < fileWebDate)
+            //            {
+            //                Console.WriteLine("DO NOT Pull: " + Path.Combine(gitDir.FullName, fi.Name));
+            //                //fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
+            //            }
+            //        }
+            //        else
+            //        {
+            //            //Console.WriteLine("Pull: " + fi.Name);
+            //            //fi.CopyTo(Path.Combine(gitDir.FullName, fi.Name), true);
+            //        }
+            //    }
+            //}
             // copy any newer files from git repo to website
             foreach (var fi in gitList)
             {
@@ -329,11 +326,11 @@ namespace DNNpackager
                     {
                         var fileGitDate = fi.LastWriteTime;
                         var fileWebDate = File.GetLastWriteTime(Path.Combine(webDir.FullName, fi.Name));
-                        //if (fileGitDate > fileWebDate)
-                        //{
+                        if (fileGitDate > fileWebDate || _repofilesdelete)
+                        {
                             Console.WriteLine("CopyTo: " + Path.Combine(webDir.FullName, fi.Name));
                             fi.CopyTo(Path.Combine(webDir.FullName, fi.Name), true);
-                        //}
+                        }
                     }
                     else
                     {
