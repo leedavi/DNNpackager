@@ -74,10 +74,6 @@ DNNpackager.exe $(ProjectDir) $(ProjectDir)$(OutDir) $(ConfigurationName) /clean
 ```
 DNNpackager.exe $(ProjectDir) $(TargetDir) $(ConfigurationName) /debug
 ```
-**"/docs"** option will convert the markdown documentation to html. (See below)
-```
-DNNpackager.exe $(ProjectDir) $(TargetDir) $(ConfigurationName) /docs
-```
 
 Example from VS post build event:
 ```
