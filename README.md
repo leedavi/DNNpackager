@@ -127,45 +127,41 @@ If more arguments are passed DNNpackager can move files from your repo working a
 
 Files from the working area will be copied to the website folders.  
 
-Any website files older than the source folder will be pulled to the git folder. 
-
 Files that do not exist in the source, but exist on the website will have the extension removed so they are not used by the webiste.  If a file must be included then it should be manually copied to the source folder.
 
 A $(ProjectDir)\Installation folder should always be created. 
 
-Running DNNpacker from VS when in "release" config, will create an installation zip file for DNN.
+Running DNNpacker from VS using "release" config, will create an installation zip file for DNN.
 
-Copy Razor templates
---------------------
-
-When we copy razor templates we do not wish to compile and copy the assemblies.  (Doing this will cause the AppPool to recycle)
-
-We create a config in the VS project that has ALL project compile turned off, we can then use this to Sync the razor templates without a compile.  
-Any templates in the Git project folder will be copied to the website, if they are newer than the Git file. 
-
-And the same copy/sync rules apply for copying the Git working area files to the website.
+Copy to Working Folder (Without Compile)
+----------------------
+When we want to copy files but do not want to compile and copy the assemblies.  (Doing this will cause the AppPool to recycle)  
+The VS config deifnes if the projects are compiled or not.  
+We create a config (usually debug) in the VS project that has ALL project compile turned off, we can then use this to Sync the files without a compile.  
+Any files in the Git project folder will be copied to the website, if they are newer. 
+use the "/clean" argument to reset the website folder to the git folder.
 
 VS External Tool
 ----------------
-You can also setup external tools in VS to make compiling quicker.  
+You can also setup external tools in VS.  
 *Tools>External Tools>*  
 ![Vstools](vstools.png)  
 
 ```
 DNNpackager
 DNNpackager.exe
-$(ProjectDir) $(TargetDir) razor
+$(ProjectDir) $(TargetDir) debug
 $(ProjectDir)
 ```
-Copies only files that have changed in Git folder
+*Copies only files that have changed in Git folder*
 
 ```
 DNNpackager
 DNNpackager.exe
-$(ProjectDir) $(TargetDir) razor /clean
+$(ProjectDir) $(TargetDir) debug /clean
 $(ProjectDir)
 ```
-Copies all files in Git folder and deletes files not in Git folder.
+*Copies all files in Git folder and deletes files not in Git folder.*
 
 Shortcut keys can also help.  Setup from >Tools>Options>Environment>Keyboard
 
