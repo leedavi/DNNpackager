@@ -146,7 +146,7 @@ You can also setup external tools in VS.
 ```
 DNNpackager
 DNNpackager.exe
-$(ProjectDir) $(TargetDir) debug
+$(ProjectDir) $(TargetDir) nc-debug
 $(ProjectDir)
 ```
 *Copies only files that have changed in Git folder*
@@ -154,7 +154,7 @@ $(ProjectDir)
 ```
 DNNpackager
 DNNpackager.exe
-$(ProjectDir) $(TargetDir) debug /clean
+$(ProjectDir) $(TargetDir) nc-debug /clean
 $(ProjectDir)
 ```
 *Copies all files in Git folder and deletes files not in Git folder.*
