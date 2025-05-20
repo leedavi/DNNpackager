@@ -21,7 +21,7 @@ namespace DNNpackager
         private static List<string> _ignoredDirList;
         private static List<string> _includeDirList;        
         private static List<string> _ignoredFileList;
-        private static List<string> _includeFileList;        
+        private static Dictionary<string, string> _includeFileList;        
         private static List<string> _assemblyList;        
         private static string _version;
         private static string _binfolder;
@@ -220,13 +220,16 @@ namespace DNNpackager
                             // Include specified file at root of install zip.
                             foreach (var fileIncludePath in _includeFileList)
                             {
-                                if (fileIncludePath != "")
+                                if (fileIncludePath.Key != "")
                                 {
-                                    var fileIncludeName = Path.GetFileName(fileIncludePath);
+                                    var fileIncludeName = Path.GetFileName(fileIncludePath.Key);
                                     if (fileIncludeName != "")
                                     {
-                                        var dest = Path.Combine(destPath, Path.GetFileName(fileIncludeName));
-                                        File.Copy(fileIncludePath, dest, true);
+                                        var destPath2 = destPath;
+                                        if (fileIncludePath.Value != "") destPath2 = destPath + "\\" + fileIncludePath.Value;
+                                        if (!Directory.Exists(destPath2)) Directory.CreateDirectory(destPath2);
+                                        var dest = Path.Combine(destPath2, Path.GetFileName(fileIncludeName));
+                                        File.Copy(fileIncludePath.Key, dest, true);
                                     }
                                 }
                             }
@@ -243,6 +246,8 @@ namespace DNNpackager
                                 if (_name == "") _name = dirName;
                                 var zipFilePath = _sourceRootPath + "\\Installation\\" + _name + "_" + _version + "_Install.zip";
 
+                                // Copy resource file
+                                File.Copy(destPath + "\\Resource.zip", _sourceRootPath + "\\Installation\\Resource.zip", true);
                                 // build a zip package
                                 if (File.Exists(zipFilePath)) File.Delete(zipFilePath);
                                 ZipFile.CreateFromDirectory(destPath, zipFilePath);
@@ -456,11 +461,13 @@ namespace DNNpackager
                 {
                     _ignoredFileList.Add(_sourceRootPath + "\\" + nod.InnerText.TrimStart('\\'));
                 }
-                _includeFileList = new List<string>();
+                _includeFileList = new Dictionary<string,string>();
                 var nodList6 = _XmlDoc.SelectNodes("root/file[@include='true']/value");
                 foreach (XmlNode nod in nodList6)
                 {
-                    _includeFileList.Add(_sourceRootPath + "\\" + nod.InnerText.TrimStart('\\'));
+                    var dest = "";
+                    if (nod.Attributes["dest"] != null) dest = nod.Attributes["dest"].InnerText;
+                    _includeFileList.Add(_sourceRootPath + "\\" + nod.InnerText.TrimStart('\\'), dest);
                 }
                 _assemblyList = new List<string>();
                 var nodList5 = _XmlDoc.SelectNodes("root/assembly/value");

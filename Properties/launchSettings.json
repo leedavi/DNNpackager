@@ -2,7 +2,7 @@
   "profiles": {
     "DNNpackager": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\Nevoweb\\Websites\\RocketEcommerce\\www.dnnrocket.com\\Install\\DesktopModules\\DNNrocket"
+      "commandLineArgs": "C:\\NEVOWEB\\Projects\\DesktopModules\\DNNRocket\\RocketEndInstall\\DNNpackager.dnnpack C:\\NEVOWEB\\Projects\\DesktopModules\\DNNRocket\\RocketEndInstall\\bin\\Debug\\netstandard2.0\\ release\r\n\r\n\r\n\r\n"
     }
   }
 }
