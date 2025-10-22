@@ -51,7 +51,11 @@ namespace DNNpackager
                 _repofilesdelete = false; // Delete files in the website that don't exist in the repo;
                 if (args.Length >= 1)
                 {
-                    if (args.Length == 1) Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
+                    if (args.Length == 1)
+                    {
+                        Console.WriteLine("Press any key to start...");
+                        Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
+                    }
 
                     _websiteBinFolder = "";
                     _websiteDestFolder = "";
@@ -154,9 +158,12 @@ namespace DNNpackager
                         {
                             // search the root for the dnn file
                             var dnnFile = Path.Combine(_sourceRootPath, Path.GetFileNameWithoutExtension(configPath) + ".dnn");
-                            foreach (var f in Directory.GetFiles(_sourceRootPath))
+                            if (!File.Exists(dnnFile))
                             {
-                                if (Path.GetExtension(f).ToLower() == ".dnn") dnnFile = Path.Combine(_sourceRootPath, Path.GetFileName(f));
+                                foreach (var f in Directory.GetFiles(_sourceRootPath))
+                                {
+                                    if (Path.GetExtension(f).ToLower() == ".dnn") dnnFile = Path.Combine(_sourceRootPath, Path.GetFileName(f));
+                                }
                             }
                             var fullPath = Path.Combine(destPath, Path.GetFileName(dnnFile));
                             if (File.Exists(dnnFile))
@@ -270,15 +277,22 @@ namespace DNNpackager
                 Console.WriteLine("##################### WEBSITE FOLDER #####################  ");
                 Console.WriteLine(_websiteFolder);
                 Console.WriteLine("##################### END DNNpackager #####################  " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
-                //Console.ReadKey();
+                if (args.Length == 1)
+                {
+                    Console.WriteLine("Press any key to end...");
+                    Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("ERROR: " + ex.ToString());
                 Console.WriteLine("ERROR: ********** Shutdown website AppPool to prevent locked files. **********");
                 Thread.Sleep(10000);
-                //Console.WriteLine("Press any key.");
-                //Console.ReadKey();
+                if (args.Length == 1)
+                {
+                    Console.WriteLine("Press any key to end...");
+                    Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
+                }
             }
         }
         static void SyncAll(DirectoryInfo gitDir, DirectoryInfo webDir)
