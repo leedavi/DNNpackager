@@ -2,7 +2,7 @@
   "profiles": {
     "DNNpackager": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\NEVOWEB\\Projects\\DesktopModules\\NBright\\NBrightBuy\\DNNpackager.dnnpack \r\n\r\n\r\n"
+      "commandLineArgs": "D:\\NEVOWEB\\Project\\DesktopModules\\DNNrocket\\RocketPortal\\DNNpackager.dnnpack\r\n\r\n"
     }
   }
 }

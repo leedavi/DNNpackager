@@ -21,7 +21,8 @@ namespace DNNpackager
         private static List<string> _ignoredDirList;
         private static List<string> _includeDirList;        
         private static List<string> _ignoredFileList;
-        private static Dictionary<string, string> _includeFileList;        
+        private static Dictionary<string, string> _includeFileList;
+        private static Dictionary<string, string> _moveDirList;
         private static List<string> _assemblyList;        
         private static string _version;
         private static string _binfolder;
@@ -117,14 +118,6 @@ namespace DNNpackager
                         //setup config
                         SetupConfig(configPath);
 
-                        if (_docsMode)
-                        {
-                            Console.WriteLine("##################### MARKDOWN DOCS #####################  ");
-                            // Build MarkDown Docs
-                            var markDownData = new MarkDownLimpet(_sourceRootPath);
-                            markDownData.SaveDocs(_websiteFolder);
-                        }
-
                         // do recursive copy files
                         Console.WriteLine("--- Folder Search ---");
                         DirCopy(_sourceRootPath); // copy root without recursive
@@ -141,7 +134,19 @@ namespace DNNpackager
                                 Console.WriteLine("--- Sync All : Take oldest file ---");
                                 SyncAll(diSource, diTarget); // take the oldest file in GIT and on Website. usualy for Razor Templates.
                             }
+
+                            Console.WriteLine("##################### MOVE FILES #####################  ");
+                            foreach (var mDir in _moveDirList)
+                            {
+                                var diSource2 = new DirectoryInfo(diSource + mDir.Key);
+                                var diTarget2 = new DirectoryInfo(_websiteFolder + mDir.Value);
+                                Console.WriteLine("diSource2: " + diSource2.FullName);
+                                Console.WriteLine("diTarget2: " + diTarget2.FullName);
+                                CopyAll(diSource2, diTarget2, "release");
+                            }
+
                         }
+
 
                         // get the .dnn files to the root.
                         var dnnFileExists = false;
@@ -513,6 +518,17 @@ namespace DNNpackager
                     _mdFolder = nod9.InnerText;
                 else
                     _mdFolder = _sourceRootPath + "\\docs";
+
+                _moveDirList = new Dictionary<string, string>();
+                var nodList10 = _XmlDoc.SelectNodes("root/movedir/value");
+                foreach (XmlNode nod in nodList10)
+                {
+                    var dest = "";
+                    if (nod.Attributes["dest"] != null) dest = nod.Attributes["dest"].InnerText;
+                    _moveDirList.Add("\\" + nod.InnerText.TrimStart('\\'), dest);
+                }
+
+                
 
                 Console.WriteLine("MarkDown Docs: " + _mdFolder.ToString());
 
