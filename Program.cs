@@ -54,8 +54,8 @@ namespace DNNpackager
                 {
                     if (args.Length == 1)
                     {
-                        Console.WriteLine("Press any key to start...");
-                        Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
+                        //Console.WriteLine("Press any key to start...");
+                        //Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
                     }
 
                     _websiteBinFolder = "";
@@ -284,8 +284,8 @@ namespace DNNpackager
                 Console.WriteLine("##################### END DNNpackager #####################  " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
                 if (args.Length == 1)
                 {
-                    Console.WriteLine("Press any key to end...");
-                    Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
+                    //Console.WriteLine("Press any key to end...");
+                    //Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
                 }
             }
             catch (Exception ex)
@@ -295,8 +295,8 @@ namespace DNNpackager
                 Thread.Sleep(10000);
                 if (args.Length == 1)
                 {
-                    Console.WriteLine("Press any key to end...");
-                    Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
+                    //Console.WriteLine("Press any key to end...");
+                    //Console.ReadKey(); // wait for keypress if we run direct from File Explorer.
                 }
             }
         }
