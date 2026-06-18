@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
@@ -34,10 +35,10 @@ namespace DNNpackager
         private static string _websiteBinFolder;
         private static string _websiteDestFolder;
         private static string _mdFolder;
-        
+        private static Dictionary<string, string> _jsonDictList;
+
         private static bool _nocompile;
         private static bool _debugMode;
-        private static bool _docsMode;
 
         // options (args > 3)
         private static bool _repofilesdelete;
@@ -62,7 +63,6 @@ namespace DNNpackager
                     _websiteDestFolder = "";
                     _nocompile = false;
                     _debugMode = false;
-                    _docsMode = false;
 
                     var binSource = "";
                     var configurationName = "release";
@@ -77,7 +77,6 @@ namespace DNNpackager
                     }
                     if (args.Contains("/debug")) _debugMode = true;
                     if (args.Contains("/clean")) _repofilesdelete = true;
-                    if (args.Contains("/docs")) _docsMode = true;
                     
                     // Sleep if we need to debug, so we can attach debugger
                     if (_debugMode) Thread.Sleep(6000);
@@ -267,6 +266,18 @@ namespace DNNpackager
                         }
 
                         Directory.Delete(destPath, true);
+
+                        // Output json files (always, when configured)
+                        if (_jsonDictList.Count > 0)
+                        {
+                            Console.WriteLine("##################### BUILD JSON #####################  ");
+                            foreach (var jsonFile in _jsonDictList)
+                            {
+                                var outputfile = jsonFile.Value;
+                                var inputfile = jsonFile.Key;
+                                BuildJsonFromCsFile(inputfile, outputfile);
+                            }
+                        }
 
                     }
                     else
@@ -566,6 +577,23 @@ namespace DNNpackager
                 if (string.IsNullOrEmpty(_websiteDestFolder) && !string.IsNullOrEmpty(_websitedestrelpath)) _websiteDestFolder = _websiteFolder + _websitedestrelpath;
                 //Console.WriteLine("WebsiteBinFolder: " + _websiteBinFolder);
                 //Console.WriteLine("WebsiteDestFolder: " + _websiteDestFolder);
+
+
+                _jsonDictList = new Dictionary<string, string>();
+                var nodListjson = _XmlDoc.SelectNodes("root/json/file");
+                foreach (XmlNode nod in nodListjson)
+                {
+                    var inputNod = nod.SelectSingleNode("input");
+                    var outputNod = nod.SelectSingleNode("output");
+                    if (inputNod != null && outputNod != null)
+                    {
+                        var k = inputNod.InnerText;
+                        var v = outputNod.InnerText;
+                        if (!_jsonDictList.ContainsKey(k)) _jsonDictList.Add(k, v);
+                    }
+                }
+
+
             }
             catch (System.Exception excpt)
             {
@@ -643,6 +671,188 @@ namespace DNNpackager
                 return Source;
 
             string result = Source.Remove(place, Find.Length).Insert(place, Replace);
+            return result;
+        }
+
+        static void BuildJsonFromCsFile(string inputFile, string outputFile)
+        {
+            Console.WriteLine("BuildJson: " + inputFile);
+            if (!File.Exists(inputFile))
+            {
+                Console.WriteLine("JSON input file not found: " + inputFile);
+                return;
+            }
+
+            var lines = File.ReadAllLines(inputFile);
+            var namespaceName = "";
+            var className = "";
+            var methods = new List<Dictionary<string, object>>();
+            var pendingDocLines = new List<string>();
+            var isObsolete = false;
+
+            var docLineRegex = new Regex(@"^\s*///");
+            var attributeLineRegex = new Regex(@"^\s*\[");
+            var namespaceRegex = new Regex(@"^\s*namespace\s+([\w.]+)");
+            var classRegex = new Regex(@"^\s*(public|internal|private)\s+((?:(?:static|abstract|sealed|partial)\s+)*)class\s+(\w+)");
+            var methodRegex = new Regex(@"^\s*(public)\s+((?:(?:static|virtual|override|async|abstract|new|sealed|partial|extern)\s+)*)((?:[\w<>\[\]?.,]|\s(?!\s*[({]))+?)\s+(\w+)\s*\(([^)]*)\)\s*[{;]?\s*$");
+
+            foreach (var rawLine in lines)
+            {
+                var line = rawLine.TrimEnd('\r');
+
+                var nsMatch = namespaceRegex.Match(line);
+                if (nsMatch.Success && namespaceName == "")
+                    namespaceName = nsMatch.Groups[1].Value.Trim();
+
+                var classMatch = classRegex.Match(line);
+                if (classMatch.Success)
+                    className = classMatch.Groups[3].Value.Trim();
+
+                if (docLineRegex.IsMatch(line))
+                {
+                    pendingDocLines.Add(line);
+                    continue;
+                }
+
+                if (attributeLineRegex.IsMatch(line))
+                {
+                    if (Regex.IsMatch(line, @"^\s*\[Obsolete")) isObsolete = true;
+                    continue;
+                }
+
+                var methodMatch = methodRegex.Match(line);
+                if (methodMatch.Success && !isObsolete)
+                {
+                    var modifiers = methodMatch.Groups[2].Value;
+                    var isStatic = modifiers.Contains("static");
+                    var returnType = methodMatch.Groups[3].Value.Trim();
+                    var methodName = methodMatch.Groups[4].Value.Trim();
+                    var paramsStr = methodMatch.Groups[5].Value.Trim();
+
+                    if (methodName != className) // skip constructors
+                    {
+                        var (summary, paramDocs, _) = ParseDocComments(pendingDocLines);
+                        var parameters = ParseMethodParameters(paramsStr, paramDocs);
+                        var signature = line.Trim().TrimEnd('{').TrimEnd(';').Trim();
+
+                        methods.Add(new Dictionary<string, object>
+                        {
+                            ["type"] = "csharp-method",
+                            ["name"] = methodName,
+                            ["source_file"] = inputFile,
+                            ["description"] = summary,
+                            ["signature"] = signature,
+                            ["classname"] = className,
+                            ["isstatic"] = isStatic ? "true" : "false",
+                            ["namespace"] = namespaceName,
+                            ["parameters"] = parameters,
+                            ["returns"] = returnType
+                        });
+                    }
+                }
+
+                pendingDocLines.Clear();
+                isObsolete = false;
+            }
+
+            var json = System.Text.Json.JsonSerializer.Serialize(methods, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            var outputDir = Path.GetDirectoryName(outputFile);
+            if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir)) Directory.CreateDirectory(outputDir);
+            File.WriteAllText(outputFile, json);
+            Console.WriteLine("JSON written: " + outputFile);
+        }
+
+        static (string summary, Dictionary<string, string> paramDocs, string returnDoc) ParseDocComments(List<string> docLines)
+        {
+            var summary = new StringBuilder();
+            var paramDocs = new Dictionary<string, string>();
+            var returnDoc = "";
+            var inSummary = false;
+
+            foreach (var rawLine in docLines)
+            {
+                var trimmed = rawLine.TrimStart();
+                if (trimmed.StartsWith("///")) trimmed = trimmed.Substring(3).Trim();
+
+                if (!inSummary && trimmed.Contains("<summary>"))
+                {
+                    inSummary = true;
+                    var afterOpen = trimmed.Substring(trimmed.IndexOf("<summary>") + 9);
+                    if (afterOpen.Contains("</summary>"))
+                    {
+                        summary.Append(afterOpen.Substring(0, afterOpen.IndexOf("</summary>")).Trim());
+                        inSummary = false;
+                    }
+                    else if (afterOpen.Trim().Length > 0)
+                        summary.Append(afterOpen.Trim() + " ");
+                    continue;
+                }
+                if (inSummary)
+                {
+                    if (trimmed.Contains("</summary>"))
+                    {
+                        summary.Append(trimmed.Substring(0, trimmed.IndexOf("</summary>")).Trim());
+                        inSummary = false;
+                    }
+                    else
+                        summary.Append(trimmed + " ");
+                    continue;
+                }
+
+                var paramMatch = Regex.Match(trimmed, @"<param\s+name=""(\w+)""[^>]*>(.*?)(?:</param>|$)");
+                if (paramMatch.Success)
+                    paramDocs[paramMatch.Groups[1].Value] = paramMatch.Groups[2].Value.Trim();
+
+                var retMatch = Regex.Match(trimmed, @"<returns>(.*?)(?:</returns>|$)");
+                if (retMatch.Success)
+                    returnDoc = retMatch.Groups[1].Value.Trim();
+            }
+
+            return (summary.ToString().Trim(), paramDocs, returnDoc);
+        }
+
+        static List<Dictionary<string, string>> ParseMethodParameters(string paramsStr, Dictionary<string, string> paramDocs)
+        {
+            var result = new List<Dictionary<string, string>>();
+            if (string.IsNullOrWhiteSpace(paramsStr)) return result;
+
+            foreach (var part in SplitParams(paramsStr))
+            {
+                var p = Regex.Replace(part.Trim(), @"^(out|ref|in|params)\s+", "");
+                var eqIdx = p.IndexOf('=');
+                if (eqIdx > 0) p = p.Substring(0, eqIdx).Trim();
+                var lastSpace = p.LastIndexOf(' ');
+                if (lastSpace > 0)
+                {
+                    var paramType = p.Substring(0, lastSpace).Trim();
+                    var paramName = p.Substring(lastSpace + 1).Trim();
+                    result.Add(new Dictionary<string, string>
+                    {
+                        ["name"] = paramName,
+                        ["type"] = paramType,
+                        ["description"] = paramDocs.ContainsKey(paramName) ? paramDocs[paramName] : ""
+                    });
+                }
+            }
+            return result;
+        }
+
+        static List<string> SplitParams(string paramsStr)
+        {
+            var result = new List<string>();
+            int depth = 0;
+            int start = 0;
+            for (int i = 0; i < paramsStr.Length; i++)
+            {
+                if (paramsStr[i] == '<') depth++;
+                else if (paramsStr[i] == '>') depth--;
+                else if (paramsStr[i] == ',' && depth == 0)
+                {
+                    result.Add(paramsStr.Substring(start, i - start));
+                    start = i + 1;
+                }
+            }
+            result.Add(paramsStr.Substring(start));
             return result;
         }
     }
