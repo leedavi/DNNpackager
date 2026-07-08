@@ -30,6 +30,7 @@ namespace DNNpackager
         private static string _name;
 
         private static string _websiteFolder;
+        private static List<string> _websiteFolderList;
         private static string _websitedestrelpath;
         private static string _websitedestbinrelpath;
         private static string _websiteBinFolder;
@@ -122,28 +123,31 @@ namespace DNNpackager
                         DirCopy(_sourceRootPath); // copy root without recursive
                         DirSearch(_sourceRootPath, 0);
 
-                        if (_websiteDestFolder != "")
+                        var deployList = _websiteFolderList.Count > 0
+                            ? _websiteFolderList.Select(wf => { var (d, b) = GetWebsitePaths(wf); return (root: wf, dest: d, bin: b); }).ToList()
+                            : new List<(string root, string dest, string bin)> { (_websiteFolder, _websiteDestFolder, _websiteBinFolder) };
+
+                        foreach (var site in deployList)
                         {
-                            Console.WriteLine("##################### COPY FILES #####################  ");
-                            // Copy files to working website direcotry
-                            var diSource = new DirectoryInfo(_resourcesPath);
-                            var diTarget = new DirectoryInfo(_websiteDestFolder);
-                            if (_websiteDestFolder != "") // we may only want to build install zip.
+                            if (!string.IsNullOrEmpty(site.dest))
                             {
+                                Console.WriteLine("##################### COPY FILES #####################  ");
+                                // Copy files to working website directory
+                                var diSource = new DirectoryInfo(_resourcesPath);
+                                var diTarget = new DirectoryInfo(site.dest);
                                 Console.WriteLine("--- Sync All : Take oldest file ---");
-                                SyncAll(diSource, diTarget); // take the oldest file in GIT and on Website. usualy for Razor Templates.
-                            }
+                                SyncAll(diSource, diTarget); // take the oldest file in GIT and on Website. usually for Razor Templates.
 
-                            Console.WriteLine("##################### MOVE FILES #####################  ");
-                            foreach (var mDir in _moveDirList)
-                            {
-                                var diSource2 = new DirectoryInfo(diSource + mDir.Key);
-                                var diTarget2 = new DirectoryInfo(_websiteFolder + mDir.Value);
-                                Console.WriteLine("diSource2: " + diSource2.FullName);
-                                Console.WriteLine("diTarget2: " + diTarget2.FullName);
-                                CopyAll(diSource2, diTarget2, "release");
+                                Console.WriteLine("##################### MOVE FILES #####################  ");
+                                foreach (var mDir in _moveDirList)
+                                {
+                                    var diSource2 = new DirectoryInfo(diSource + mDir.Key);
+                                    var diTarget2 = new DirectoryInfo(site.root + mDir.Value);
+                                    Console.WriteLine("diSource2: " + diSource2.FullName);
+                                    Console.WriteLine("diTarget2: " + diTarget2.FullName);
+                                    CopyAll(diSource2, diTarget2, "release");
+                                }
                             }
-
                         }
 
 
@@ -202,10 +206,13 @@ namespace DNNpackager
                                             if (!fullPath.ToLower().EndsWith(".pdb") || (configurationName == "debug"))
                                             {
                                                 File.Copy(fullPath, destPath.TrimEnd('\\') + "\\" + assemblyName, true);
-                                                // Copy exe to working website bin direcotry
-                                                if (_websiteBinFolder != "")
+                                                // Copy assembly to each working website bin directory
+                                                foreach (var site in deployList)
                                                 {
-                                                    File.Copy(fullPath, _websiteBinFolder.TrimEnd('\\') + "\\" + assemblyName, true);
+                                                    if (!string.IsNullOrEmpty(site.bin))
+                                                    {
+                                                        File.Copy(fullPath, site.bin.TrimEnd('\\') + "\\" + assemblyName, true);
+                                                    }
                                                 }
                                             }
 
@@ -290,8 +297,9 @@ namespace DNNpackager
                         Console.WriteLine("***** SYNC FILES ONLY *******");
                     }
                 }
-                Console.WriteLine("##################### WEBSITE FOLDER #####################  ");
-                Console.WriteLine(_websiteFolder);
+                Console.WriteLine("##################### WEBSITE FOLDER(S) #####################  ");
+                foreach (var wf in _websiteFolderList.Count > 0 ? _websiteFolderList : new List<string> { _websiteFolder })
+                    Console.WriteLine(wf);
                 Console.WriteLine("##################### END DNNpackager #####################  " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
                 if (args.Length == 1)
                 {
@@ -450,6 +458,20 @@ namespace DNNpackager
             return dnnpackMapPath;
         }
 
+        static (string websiteDestFolder, string websiteBinFolder) GetWebsitePaths(string websiteFolder)
+        {
+            var websiteDestFolder = "";
+            var websiteBinFolder = "";
+            if (!string.IsNullOrEmpty(websiteFolder) && !string.IsNullOrEmpty(_websitedestrelpath))
+            {
+                websiteBinFolder = websiteFolder.TrimEnd('\\') + "\\" + _websitedestbinrelpath.Replace("/", "\\").TrimStart('\\');
+                websiteDestFolder = websiteFolder.TrimEnd('\\') + "\\" + _websitedestrelpath.Replace("/", "\\").TrimStart('\\');
+            }
+            if (string.IsNullOrEmpty(websiteBinFolder)) websiteBinFolder = websiteFolder + _websitedestbinrelpath;
+            if (string.IsNullOrEmpty(websiteDestFolder) && !string.IsNullOrEmpty(_websitedestrelpath)) websiteDestFolder = websiteFolder + _websitedestrelpath;
+            return (websiteDestFolder, websiteBinFolder);
+        }
+
         static void SetupConfig(string configPath)
         {
             try
@@ -554,27 +576,26 @@ namespace DNNpackager
                 var xmlDoc = new XmlDocument();
                 xmlDoc.Load(dnnpackconfig);
 
-                XmlNode websiteFolder = xmlDoc.SelectSingleNode("root/websitemappath");
-                if (websiteFolder != null) _websiteFolder = websiteFolder.InnerText;
-                //Console.WriteLine("WebsiteFolder: " + _websiteFolder);
-                if (!string.IsNullOrEmpty(_websiteFolder) && !string.IsNullOrEmpty(_websitedestrelpath))
+                _websiteFolderList = new List<string>();
+                var websiteFolderNodes = xmlDoc.SelectNodes("root/websitemappath");
+                foreach (XmlNode wn in websiteFolderNodes)
                 {
-                    // both websitefolder and destrelpath are used, so take these to determine binfolder and destfolder
-                    _websiteBinFolder = _websiteFolder.TrimEnd('\\') + "\\" + _websitedestbinrelpath.Replace("/", "\\").TrimStart('\\');
-                    _websiteDestFolder = _websiteFolder.TrimEnd('\\') + "\\" + _websitedestrelpath.Replace("/", "\\").TrimStart('\\');
+                    if (!string.IsNullOrWhiteSpace(wn.InnerText))
+                        _websiteFolderList.Add(wn.InnerText);
                 }
-                else
+                if (_websiteFolderList.Count > 0) _websiteFolder = _websiteFolderList[0];
+                //Console.WriteLine("WebsiteFolder: " + _websiteFolder);
+                if (_websiteFolderList.Count == 0)
                 {
-                    // try to use root/websitebinfoldermappath and "root/websitedestfoldermappath to get the paths
+                    // fallback: use explicit websitebinfoldermappath / websitedestfoldermappath
                     XmlNode websiteBinFolder = xmlDoc.SelectSingleNode("root/websitebinfoldermappath");
                     if (websiteBinFolder != null) _websiteBinFolder = websiteBinFolder.InnerText;
-
                     XmlNode websiteDestFolder = xmlDoc.SelectSingleNode("root/websitedestfoldermappath");
                     if (websiteDestFolder != null) _websiteDestFolder = websiteDestFolder.InnerText;
+                    // if we still don't have binfolder or destfolder, build them from relpaths and websitepath
+                    if (string.IsNullOrEmpty(_websiteBinFolder)) _websiteBinFolder = _websiteFolder + _websitedestbinrelpath;
+                    if (string.IsNullOrEmpty(_websiteDestFolder) && !string.IsNullOrEmpty(_websitedestrelpath)) _websiteDestFolder = _websiteFolder + _websitedestrelpath;
                 }
-                // if we still don't have binfolder or destfolder, build them from relpaths and websitepath
-                if (string.IsNullOrEmpty(_websiteBinFolder)) _websiteBinFolder = _websiteFolder + _websitedestbinrelpath;
-                if (string.IsNullOrEmpty(_websiteDestFolder) && !string.IsNullOrEmpty(_websitedestrelpath)) _websiteDestFolder = _websiteFolder + _websitedestrelpath;
                 //Console.WriteLine("WebsiteBinFolder: " + _websiteBinFolder);
                 //Console.WriteLine("WebsiteDestFolder: " + _websiteDestFolder);
 
