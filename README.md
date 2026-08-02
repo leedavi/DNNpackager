@@ -10,12 +10,16 @@ Example:
 ```xml
 <root>
 	<version>1.0.0</version>
+  <!-- Optional: override the root folder used to resolve all relative paths in this file.
+	   Can be relative to this .dnnpack file's location, or an absolute path.
+	   If omitted, paths are relative to the folder containing this .dnnpack file. -->
+  <rootfolder>..\MyProject</rootfolder>
   <websitedestrelpath>\DesktopModules\DNNrocket\AppThemes</websitedestrelpath>
   <websitedestbinrelpath>\bin</websitedestbinrelpath>
   <!-- Include only files that match the regular expression -->
-	    <regexpr>(\.cshtml|\.html|\.resx|\.dnn|\.png|\.jpg|\.gif|\.css|\.svg|\.js|\.xml|\.txt|\.md|\.aspx|\.ascx|\.ashx|\.woff|\.woff2|\.ttf)$</regexpr>
+		<regexpr>(\.cshtml|\.html|\.resx|\.dnn|\.png|\.jpg|\.gif|\.css|\.svg|\.js|\.xml|\.txt|\.md|\.aspx|\.ascx|\.ashx|\.woff|\.woff2|\.ttf)$</regexpr>
 	<directory include='false'>
-		<!-- All paths should be from the source root (project root) -->
+		<!-- All paths should be from the rootfolder (or project root if rootfolder is not set) -->
 		<value>\.git</value>
 		<value>\.vs</value>
 		<value>\bin</value>
@@ -25,16 +29,16 @@ Example:
 		<value>\obj</value>
 		<value>\packages</value>
 		<value>\Providers</value>
-    <value>\render</value>
-    <value>\SqlDataProvider</value>
-    <value>\_external</value>
-    <value>\ApiControllers</value>    
+	<value>\render</value>
+	<value>\SqlDataProvider</value>
+	<value>\_external</value>
+	<value>\ApiControllers</value>    
   </directory>
   <file include='false'>
   </file>
 	<assembly>
 		<value>RocketAppThemes.dll</value>
-    <value>RocketAppThemes.pdb</value>
+	<value>RocketAppThemes.pdb</value>
   </assembly>
 </root>
 ```

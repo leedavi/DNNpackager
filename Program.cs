@@ -28,6 +28,7 @@ namespace DNNpackager
         private static string _version;
         private static string _binfolder;
         private static string _name;
+        private static string _configRootPath;
 
         private static string _websiteFolder;
         private static List<string> _websiteFolderList;
@@ -120,8 +121,8 @@ namespace DNNpackager
 
                         // do recursive copy files
                         Console.WriteLine("--- Folder Search ---");
-                        DirCopy(_sourceRootPath); // copy root without recursive
-                        DirSearch(_sourceRootPath, 0);
+                        DirCopy(_configRootPath); // copy root without recursive
+                        DirSearch(_configRootPath, 0);
 
                         var deployList = _websiteFolderList.Count > 0
                             ? _websiteFolderList.Select(wf => { var (d, b) = GetWebsitePaths(wf); return (root: wf, dest: d, bin: b); }).ToList()
@@ -478,18 +479,31 @@ namespace DNNpackager
             {
                 _XmlDoc = new XmlDocument();
                 _XmlDoc.Load(configPath);
+
+                // Resolve <rootfolder> — overrides _sourceRootPath as the base for relative paths
+                _configRootPath = _sourceRootPath;
+                var nodRootFolder = _XmlDoc.SelectSingleNode("root/rootfolder");
+                if (nodRootFolder != null && !string.IsNullOrWhiteSpace(nodRootFolder.InnerText))
+                {
+                    var rf = nodRootFolder.InnerText.Trim();
+                    _configRootPath = Path.IsPathRooted(rf)
+                        ? rf
+                        : Path.GetFullPath(Path.Combine(_sourceRootPath, rf));
+                    Console.WriteLine("RootFolder override: " + _configRootPath);
+                }
+
                 // get directory and file ignore list
                 _ignoredDirList = new List<string>();
                 var nodList = _XmlDoc.SelectNodes("root/directory[@include='false']/value");
                 foreach (XmlNode nod in nodList)
                 {
-                    _ignoredDirList.Add(_sourceRootPath + "\\" + nod.InnerText.TrimStart('\\'));
+                    _ignoredDirList.Add(_configRootPath + "\\" + nod.InnerText.TrimStart('\\'));
                 }
                 _includeDirList = new List<string>();
                 var nodList7 = _XmlDoc.SelectNodes("root/directory[@include='true']/value");
                 foreach (XmlNode nod in nodList7)
                 {
-                    _includeDirList.Add(_sourceRootPath + "\\" + nod.InnerText.TrimStart('\\'));
+                    _includeDirList.Add(_configRootPath + "\\" + nod.InnerText.TrimStart('\\'));
                 }
                 // add all recursive folders
                 for (int i = 0; i < _includeDirList.Count; i++)
@@ -511,7 +525,7 @@ namespace DNNpackager
                 var nodList2 = _XmlDoc.SelectNodes("root/file[@include='false']/value");
                 foreach (XmlNode nod in nodList2)
                 {
-                    _ignoredFileList.Add(_sourceRootPath + "\\" + nod.InnerText.TrimStart('\\'));
+                    _ignoredFileList.Add(_configRootPath + "\\" + nod.InnerText.TrimStart('\\'));
                 }
                 _includeFileList = new Dictionary<string,string>();
                 var nodList6 = _XmlDoc.SelectNodes("root/file[@include='true']/value");
@@ -519,13 +533,13 @@ namespace DNNpackager
                 {
                     var dest = "";
                     if (nod.Attributes["dest"] != null) dest = nod.Attributes["dest"].InnerText;
-                    _includeFileList.Add(_sourceRootPath + "\\" + nod.InnerText.TrimStart('\\'), dest);
+                    _includeFileList.Add(_configRootPath + "\\" + nod.InnerText.TrimStart('\\'), dest);
                 }
                 _assemblyList = new List<string>();
                 var nodList5 = _XmlDoc.SelectNodes("root/assembly/value");
                 foreach (XmlNode nod in nodList5)
                 {
-                    _assemblyList.Add(_sourceRootPath + "\\" + nod.InnerText.TrimStart('\\'));
+                    _assemblyList.Add(_configRootPath + "\\" + nod.InnerText.TrimStart('\\'));
                 }
                 var nod3 = _XmlDoc.SelectSingleNode("root/regexpr");
                 _pattern = @"(\.cshtml|\.html|\.resx|\.dnn|\.png|\.css|\.js|\.xml|\.txt|\.md)$";
