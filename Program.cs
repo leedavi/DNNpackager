@@ -643,7 +643,7 @@ namespace DNNpackager
                 {
                     if (_includeDirList.Count == 0 || (_includeDirList.Contains(sDir)))
                     {
-                        var destPath = _resourcesPath + sDir.Replace(_sourceRootPath, "");
+                        var destPath = _resourcesPath + sDir.Replace(_configRootPath, "");
                         // copy required files.
                         var files = Directory.GetFiles(sDir)
                             .Where(x => Regex.IsMatch(x, _pattern))
