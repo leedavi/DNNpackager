@@ -793,7 +793,8 @@ namespace DNNpackager
                 isObsolete = false;
             }
 
-            var json = System.Text.Json.JsonSerializer.Serialize(methods, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            var sortedMethods = methods.OrderBy(m => (string)m["name"], System.StringComparer.OrdinalIgnoreCase).ToList();
+            var json = System.Text.Json.JsonSerializer.Serialize(sortedMethods, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
             var outputDir = Path.GetDirectoryName(outputFile);
             if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir)) Directory.CreateDirectory(outputDir);
             File.WriteAllText(outputFile, json);
