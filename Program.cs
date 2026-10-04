@@ -276,7 +276,7 @@ namespace DNNpackager
                         Directory.Delete(destPath, true);
 
                         // Output json files (always, when configured)
-                        if (_jsonDictList.Count > 0)
+                        if (_jsonDictList.Count > 0 && configurationName.ToLower() == "release")
                         {
                             Console.WriteLine("##################### BUILD JSON #####################  ");
                             foreach (var jsonFile in _jsonDictList)
@@ -284,6 +284,9 @@ namespace DNNpackager
                                 var outputfile = jsonFile.Value;
                                 var inputfile = jsonFile.Key;
                                 BuildJsonFromCsFile(inputfile, outputfile);
+
+                                var mdOutputFile = Path.ChangeExtension(outputfile, ".md");
+                                BuildMarkdownFromJsonFile(outputfile, mdOutputFile);
                             }
                         }
 
@@ -718,7 +721,7 @@ namespace DNNpackager
                 return;
             }
 
-            var lines = File.ReadAllLines(inputFile);
+            var lines = MergeMultilineSignatures(File.ReadAllLines(inputFile));
             var namespaceName = "";
             var className = "";
             var methods = new List<Dictionary<string, object>>();
@@ -733,7 +736,7 @@ namespace DNNpackager
 
             foreach (var rawLine in lines)
             {
-                var line = rawLine.TrimEnd('\r');
+                var line = rawLine;
 
                 var nsMatch = namespaceRegex.Match(line);
                 if (nsMatch.Success && namespaceName == "")
@@ -795,6 +798,183 @@ namespace DNNpackager
             if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir)) Directory.CreateDirectory(outputDir);
             File.WriteAllText(outputFile, json);
             Console.WriteLine("JSON written: " + outputFile);
+        }
+
+        // Joins method signatures that span multiple lines (e.g. wrapped parameter lists)
+        // into a single logical line so every overload is correctly parsed.
+        static List<string> MergeMultilineSignatures(string[] rawLines)
+        {
+            var result = new List<string>();
+            string pending = null;
+            int depth = 0;
+
+            foreach (var raw in rawLines)
+            {
+                var line = raw.TrimEnd('\r');
+
+                if (pending == null)
+                {
+                    if (Regex.IsMatch(line, @"^\s*(public|internal|private|protected)\b"))
+                    {
+                        var opens = line.Count(c => c == '(');
+                        var closes = line.Count(c => c == ')');
+                        depth = opens - closes;
+                        if (depth > 0)
+                        {
+                            pending = line.TrimEnd();
+                            continue;
+                        }
+                    }
+                    result.Add(line);
+                }
+                else
+                {
+                    pending += " " + line.Trim();
+                    depth += line.Count(c => c == '(') - line.Count(c => c == ')');
+                    if (depth <= 0)
+                    {
+                        result.Add(pending);
+                        pending = null;
+                    }
+                }
+            }
+
+            if (pending != null) result.Add(pending);
+            return result;
+        }
+
+        private class JsonParamInfo
+        {
+            public string name { get; set; }
+            public string type { get; set; }
+            public string description { get; set; }
+        }
+
+        private class JsonMethodInfo
+        {
+            public string type { get; set; }
+            public string name { get; set; }
+            public string source_file { get; set; }
+            public string description { get; set; }
+            public string signature { get; set; }
+            public string classname { get; set; }
+            public string isstatic { get; set; }
+            public string @namespace { get; set; }
+            public List<JsonParamInfo> parameters { get; set; }
+            public string returns { get; set; }
+        }
+
+        // Builds a styled, collapsible Markdown/HTML token reference document from a BuildJsonFromCsFile JSON output.
+        static void BuildMarkdownFromJsonFile(string jsonFile, string mdFile)
+        {
+            Console.WriteLine("BuildMarkdown: " + jsonFile);
+            if (!File.Exists(jsonFile))
+            {
+                Console.WriteLine("JSON input file not found: " + jsonFile);
+                return;
+            }
+
+            List<JsonMethodInfo> methods;
+            try
+            {
+                var jsonText = File.ReadAllText(jsonFile);
+                methods = System.Text.Json.JsonSerializer.Deserialize<List<JsonMethodInfo>>(jsonText,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            catch (System.Exception excpt)
+            {
+                Console.WriteLine("Failed to parse JSON: " + excpt.Message);
+                return;
+            }
+
+            if (methods == null) return;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("<style>");
+            sb.AppendLine("\tdetails.clean-accordion {");
+            sb.AppendLine("\t\tbackground-color: #fff; /* Changed to white */");
+            sb.AppendLine("\t\tborder: 1px solid #ddd;");
+            sb.AppendLine("\t\tborder-radius: 5px;");
+            sb.AppendLine("\t\tmargin-bottom: 0.5em;");
+            sb.AppendLine("\t\toverflow: hidden;");
+            sb.AppendLine("\t}");
+            sb.AppendLine("\tdetails.clean-accordion summary {");
+            sb.AppendLine("\t\tfont-weight: 600;");
+            sb.AppendLine("\t\tpadding: 0.6em 1em; /* Reduced padding */");
+            sb.AppendLine("\t\tcursor: pointer;");
+            sb.AppendLine("\t\tbackground-color: #f5f5f5;");
+            sb.AppendLine("\t\tborder-bottom: 1px solid #ddd;");
+            sb.AppendLine("\t\ttransition: background-color 0.2s;");
+            sb.AppendLine("\t\tlist-style: none;");
+            sb.AppendLine("\t\tdisplay: block;");
+            sb.AppendLine("\t}");
+            sb.AppendLine("\tdetails.clean-accordion summary::-webkit-details-marker {");
+            sb.AppendLine("\t\tdisplay: none;");
+            sb.AppendLine("\t}");
+            sb.AppendLine("\tdetails.clean-accordion[open] > summary {");
+            sb.AppendLine("\t\tbackground-color: #e9e9e9;");
+            sb.AppendLine("\t}");
+            sb.AppendLine("\tdetails.clean-accordion summary:hover {");
+            sb.AppendLine("\t\tbackground-color: #e1e1e1;");
+            sb.AppendLine("\t}");
+            sb.AppendLine("\tdetails.clean-accordion .token-details {");
+            sb.AppendLine("\t\tpadding: 0.8em 1em 1em 2em; /* Reduced padding, kept indent */");
+            sb.AppendLine("\t\tfont-size: 0.9em;");
+            sb.AppendLine("\t}");
+            sb.AppendLine("\tdetails.clean-accordion .token-details p {");
+            sb.AppendLine("\t\tmargin-top: 0;");
+            sb.AppendLine("\t}");
+            sb.AppendLine("\tdetails.clean-accordion .token-details pre {");
+            sb.AppendLine("\t\twhite-space: pre-wrap;");
+            sb.AppendLine("\t}");
+            sb.AppendLine("</style>");
+
+            foreach (var group in methods.GroupBy(m => m.name))
+            {
+                sb.AppendLine("<details class=\"clean-accordion\">");
+                sb.AppendLine("\t<summary>" + group.Key + "</summary>");
+                sb.AppendLine("\t<div class=\"token-details\">");
+
+                var firstDescription = group.Select(m => m.description).FirstOrDefault(d => !string.IsNullOrEmpty(d));
+                if (!string.IsNullOrEmpty(firstDescription))
+                    sb.AppendLine("\t\t<p><strong>Description:</strong> " + System.Net.WebUtility.HtmlEncode(firstDescription) + "</p>");
+
+                foreach (var method in group)
+                {
+                    var isStatic = string.Equals(method.isstatic, "true", System.StringComparison.OrdinalIgnoreCase);
+
+                    sb.AppendLine("\t\t<strong>Signature</strong>");
+                    sb.AppendLine("\t\t<pre><code>" + System.Net.WebUtility.HtmlEncode(method.signature) + "</code></pre>");
+
+                    var example = BuildExampleCall(method, isStatic);
+                    sb.AppendLine("\t\t<strong>Example</strong>");
+                    sb.AppendLine("\t\t<pre><code>" + System.Net.WebUtility.HtmlEncode(example) + "</code></pre>");
+                }
+                sb.AppendLine("\t</div>");
+                sb.AppendLine("</details>");
+            }
+
+            var mdDir = Path.GetDirectoryName(mdFile);
+            if (!string.IsNullOrEmpty(mdDir) && !Directory.Exists(mdDir)) Directory.CreateDirectory(mdDir);
+            File.WriteAllText(mdFile, sb.ToString());
+            Console.WriteLine("Markdown written: " + mdFile);
+        }
+
+        static string BuildExampleCall(JsonMethodInfo method, bool isStatic)
+        {
+            var paramNames = method.parameters != null
+                ? string.Join(", ", method.parameters.Select(p => p.name))
+                : "";
+
+            var call = method.name + "(" + paramNames + ")";
+
+            if (isStatic)
+                return call;
+
+            if (string.Equals(method.returns, "void", System.StringComparison.OrdinalIgnoreCase))
+                return "@{ " + call + "; }";
+
+            return "@" + call;
         }
 
         static (string summary, Dictionary<string, string> paramDocs, string returnDoc) ParseDocComments(List<string> docLines)
